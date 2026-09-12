@@ -2,8 +2,8 @@ import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-export type MasterState = { volume: number | null; muted: boolean | null; device: string };
-export type AudioDevice = { name: string; uid: string; input: boolean; output: boolean };
+export type MasterState = { volume: number | null; muted: boolean | null; device: string; uid?: string };
+export type AudioDevice = { name: string; uid: string; input: boolean; output: boolean; virtual?: boolean };
 const BIN = join(import.meta.dir, "..", "bin", "sysvol");
 
 export const helperAvailable = (): boolean => existsSync(BIN);
@@ -13,7 +13,7 @@ export function parseMasterLine(line: string): MasterState | undefined {
   try {
     const d = JSON.parse(line);
     if (typeof d !== "object" || d === null || !("volume" in d)) return undefined;
-    return { volume: d.volume ?? null, muted: d.muted ?? null, device: String(d.device ?? "") };
+    return { volume: d.volume ?? null, muted: d.muted ?? null, device: String(d.device ?? ""), ...(typeof d.uid === "string" ? { uid: d.uid } : {}) };
   } catch {
     return undefined;
   }
@@ -25,7 +25,7 @@ export function parseDevices(text: string): AudioDevice[] {
     if (!Array.isArray(d)) return [];
     return d
       .filter((x) => x && typeof x.uid === "string" && x.uid.length > 0)
-      .map((x) => ({ name: String(x.name ?? ""), uid: String(x.uid), input: Boolean(x.input), output: Boolean(x.output) }));
+      .map((x) => ({ name: String(x.name ?? ""), uid: String(x.uid), input: Boolean(x.input), output: Boolean(x.output), ...(typeof x.virtual === "boolean" ? { virtual: x.virtual } : {}) }));
   } catch {
     return [];
   }
@@ -49,8 +49,9 @@ export function listAudioDevices(): AudioDevice[] {
   return out ? parseDevices(out) : [];
 }
 
-export const setMasterVolume = (v: number): boolean => run(["set", clamp01(v).toFixed(3)]) !== undefined;
-export const setMasterMute = (on: boolean): boolean => run(["mute", on ? "1" : "0"]) !== undefined;
+export const setMasterVolume = (v: number, uid: string): boolean => run(["set", clamp01(v).toFixed(3), uid]) !== undefined;
+export const setMasterMute = (on: boolean, uid: string): boolean => run(["mute", on ? "1" : "0", uid]) !== undefined;
+export const setOutputDevice = (uid: string): boolean => run(["output", uid]) !== undefined;
 
 /** Stream system volume changes. Returns a stop function; no-op (and calls onUnavailable) when the helper is missing. */
 export function watchMaster(onChange: (s: MasterState) => void, onUnavailable?: (why: string) => void): () => void {

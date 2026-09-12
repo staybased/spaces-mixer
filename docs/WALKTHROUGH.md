@@ -4,9 +4,9 @@ First complete [Getting started](GETTING-STARTED.md). This walkthrough assumes y
 
 ## Before going live
 
-1. Put headphones on. Select your usual output device in macOS; PHONES changes its volume but cannot select another device.
-2. Play music in Firefox. Use Brave for the destination Space and confirm BlackHole 2ch is available in its microphone selection. A dedicated music browser prevents unrelated tabs from joining the mix.
-3. Run `./start.sh` from the source folder. OBS must be connected and on the Spaces Mixer collection/Spaces Mix scene. Do not run Prepare or Build mix during a broadcast.
+1. Run `./start.sh` from the source folder. OBS must be connected and on the Spaces Mixer collection/Spaces Mix scene. Do not run Prepare or Build mix during a broadcast.
+2. Choose your speakers or headphones from the Local Output strip. Use headphones when your mic is open to avoid speaker echo. The strip controls the selected device’s volume when supported.
+3. Play music in Firefox. Use Brave for the destination Space and confirm BlackHole 2ch is available in its microphone selection. A dedicated music browser prevents unrelated tabs from joining the mix.
 4. Confirm the selected physical microphone, choose **Start sharing**, then deliberately unmute each source while off-air. Startup and setup leave both sources muted. Check Music and Mic meters separately. Select **BlackHole 2ch** as the destination's microphone, not the physical mic and not BlackHole 16ch.
 5. Do an off-air listening test using another application capable of monitoring BlackHole 2ch. Use headphones to avoid feedback; do not feed that monitor back into the captured music app.
 6. Aim for music peaks roughly 10–15 dB below voice peaks, then confirm by listening. Green status lights mean configuration checks passed; they do not prove listeners can hear you.
@@ -15,11 +15,13 @@ First complete [Getting started](GETTING-STARTED.md). This walkthrough assumes y
 
 - **Music** changes what the destination receives. The original app still plays locally, so changing this fader does not necessarily change your headphone playback.
 - **Mic** changes your voice level in the destination mix.
-- **PHONES** changes the Mac's default output volume only. Muting it does not mute your broadcast.
-- Drag a fader, or focus it and use ↑/↓. Shift makes larger steps. End sends silence. Music/Mic Home returns to 0 dB; PHONES Home sets full local volume. Scrolling does nothing to faders.
+- **Local Output** selects the Mac’s listening device and changes its volume when supported. Use the device’s physical volume control if the strip says “Use device volume.” Muting it does not mute your broadcast.
+- Drag a fader, or focus it and use ↑/↓. Shift makes larger steps. End sends silence. Music/Mic Home returns to 0 dB; Local Output Home sets full local volume. Scrolling does nothing to faders.
 - A mute button changes its indication after OBS confirms it. If the panel disconnects, do not assume the destination is muted; use the destination/OBS mute directly.
 - The Music source label is a picker. Switching targets captures all relevant audio from the new app, not one tab. Verify the source and meter before relying on the switch.
 - The Trim button toggles automatic adjustment or holds the current trim manually. There is no manual trim-value editor in this UI. Auto targets approximately −10 dBFS before the later processing/fader; listening verification of hunting/pumping remains open.
+
+To change microphones, stop sharing and choose a device from the Mic strip. It stays muted; start sharing and deliberately unmute when ready. This preserves the existing mic level and filters.
 
 ## After the session
 

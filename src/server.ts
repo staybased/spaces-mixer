@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ServerWebSocket } from "bun";
 import { mulToDb } from "./audio-math";
+import { physicalDevices, selectMic, selectOutput } from "./audio-devices";
 import { KNOWN_BROWSERS, captureCandidates, runningBrowserCount } from "./capture-sources";
 import { createRouter, MAX_BODY_BYTES } from "./http-router";
 import { assertIdle, assertOwned } from "./obs-safety";
@@ -14,7 +15,7 @@ import { isRunning, listRunningApps } from "./running-apps";
 import { NAMES, TRIM_FILTER, listMics, readLiveState, runSetup } from "./setup";
 import { nextTrim } from "./trim";
 import { MUSIC_DEVICE_UID, TapDaemon } from "./tap";
-import { getMaster, helperAvailable, listAudioDevices, setMasterMute, setMasterVolume, watchMaster, type MasterState } from "./sysvol";
+import { getMaster, helperAvailable, listAudioDevices, setMasterMute, setMasterVolume, setOutputDevice, watchMaster, type MasterState } from "./sysvol";
 
 const PORT = Number(process.env.PORT ?? 4780);
 if (!Number.isInteger(PORT) || PORT < 1024 || PORT > 65535) throw new Error("PORT must be 1024..65535");
@@ -337,15 +338,30 @@ async function setTrim(body: { auto?: boolean; db?: number }): Promise<Response>
 }
 
 async function devices(): Promise<Response> {
-  const system = listAudioDevices().filter((d) => d.input && !/BlackHole|SpacesMixerTap/i.test(d.uid));
+  const all = listAudioDevices();
+  const system = physicalDevices(all, "input");
   let mics = system.map((d) => ({ itemName: d.name, itemValue: d.uid, itemEnabled: true }));
   let currentMic: string | null = null;
   if (obs?.connected) {
     const fromObs = await listMics(obs).catch(() => []);
-    if (fromObs.length) mics = fromObs.filter((m) => m.itemValue !== "default" && !/BlackHole|SpacesMixerTap/i.test(m.itemValue));
+    if (fromObs.length) mics = fromObs.filter((m) => m.itemEnabled !== false && system.some((d) => d.uid === m.itemValue));
     currentMic = await obs.call("GetInputSettings", { inputName: NAMES.mic }).then((r) => r.inputSettings?.device_id ?? null).catch(() => null);
   }
-  return json({ mics, apps: browsers(), currentMic });
+  return json({ mics, outputs: physicalDevices(all, "output"), apps: browsers(), currentMic, currentOutput: getMaster() ?? null });
+}
+
+async function setDevice(body: { kind: "mic" | "output"; deviceUid: string }): Promise<Response> {
+  const all = listAudioDevices();
+  if (body.kind === "mic") {
+    if (!obs?.connected) return json({ error: "OBS is not connected" }, 503);
+    await selectMic(obs, body.deviceUid, all, sharing);
+    broadcast({ type: "state", inputs: await readInputs() });
+  } else {
+    master = selectOutput(body.deviceUid, all, setOutputDevice, getMaster);
+    masterError = undefined;
+    broadcast({ type: "master", ...master });
+  }
+  return json({ ok: true });
 }
 
 const dbOrSilence = (db: unknown): { inputVolumeDb: number } | { inputVolumeMul: number } | undefined => {
@@ -376,13 +392,15 @@ async function setMute(body: { input?: string; muted?: boolean }): Promise<Respo
   return json({ ok: true, muted: inputMuted });
 }
 
-async function setMaster(body: { volume?: number; muted?: boolean }): Promise<Response> {
+async function setMaster(body: { volume?: number; muted?: boolean; deviceUid: string }): Promise<Response> {
   if (!helperAvailable()) return json({ error: masterError ?? "master volume helper unavailable" }, 503);
+  if (getMaster()?.uid !== body.deviceUid) return json({ error: "Output device changed; refresh before adjusting its level" }, 409);
+  if (!physicalDevices(listAudioDevices(), "output").some((d) => d.uid === body.deviceUid)) return json({ error: "Choose physical speakers or headphones for local output" }, 409);
   if (typeof body.volume === "number") {
     if (!Number.isFinite(body.volume)) return json({ error: "volume must be 0..1" }, 400);
-    if (!setMasterVolume(body.volume)) return json({ error: "could not set system volume" }, 500);
+    if (!setMasterVolume(body.volume, body.deviceUid)) return json({ error: "This output does not support software volume; use its hardware controls" }, 500);
   }
-  if (typeof body.muted === "boolean" && !setMasterMute(body.muted)) return json({ error: "could not set system mute" }, 500);
+  if (typeof body.muted === "boolean" && !setMasterMute(body.muted, body.deviceUid)) return json({ error: "This output does not support software mute; use its hardware controls" }, 500);
   master = getMaster() ?? master;
   return json({ ok: true, master });
 }
@@ -410,7 +428,7 @@ const MIME: Record<string, string> = { html: "text/html; charset=utf-8", js: "te
 const control = (fn: (body: any) => Promise<Response>) => (body: any) => exclusive("control", () => fn(body)) as Promise<Response>;
 const route = createRouter(PORT,
   { ...Object.fromEntries(Object.entries(STATIC).map(([path, file]) => [path, () => new Response(readFileSync(join(PUBLIC, file)), { headers: { "content-type": MIME[file.split(".").pop()!] } })])), "/api/status": status, "/api/devices": devices },
-  { "/api/obs/prepare": prepare, "/api/setup": setup, "/api/volume": control(setVolume), "/api/mute": control(setMute), "/api/master": control(setMaster), "/api/source": control(setSource), "/api/trim": control(setTrim), "/api/session": sessionAction },
+  { "/api/obs/prepare": prepare, "/api/setup": setup, "/api/volume": control(setVolume), "/api/mute": control(setMute), "/api/master": control(setMaster), "/api/device": control(setDevice), "/api/source": control(setSource), "/api/trim": control(setTrim), "/api/session": sessionAction },
   (req, srv) => clients.size < 8 && srv.upgrade(req),
 );
 

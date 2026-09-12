@@ -21,3 +21,5 @@ The panel sends controls and level/status messages over localhost HTTP/WebSocket
 Closing the native panel requests verified stop and controller shutdown. A disconnected OBS or hard crash cannot be certified silent. Mute/disconnect the destination first; see [Walkthrough](WALKTHROUGH.md#after-the-session). Revoking macOS audio permission can interrupt capture but is not a substitute for a clear stop action in the planned app.
 
 Do not post raw OBS configs, state files, full app/device dumps, logs, or recordings publicly. There is no automatic diagnostic uploader or redaction tool yet.
+
+Device selectors enumerate connected CoreAudio device names and UIDs locally. Mic choice is saved by OBS in the dedicated collection; output choice changes the Mac’s default output setting. The selector sends no device information to an external service.

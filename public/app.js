@@ -160,23 +160,26 @@ const applyMeters = (levels) => {
 
 // ---- master (system output volume, mirrors the keyboard volume keys) -------------
 
+let deviceBusy = false;
+let deviceData = null;
+let deviceRefreshBusy = false;
 const masterEl = $(".strip.master");
-const master = { available: false, fader: $(".fader", masterEl), cap: $(".cap", masterEl), readout: $(".readout", masterEl), mute: $(".mute", masterEl), vol: 0.5, muted: false };
+const master = { available: false, fader: $(".fader", masterEl), cap: $(".cap", masterEl), readout: $(".readout", masterEl), mute: $(".mute", masterEl), vol: 0.5, muted: false, uid: null, muteAvailable: false };
 const renderMaster = () => {
   master.cap.style.setProperty("--pos", clamp(master.vol, 0, 1));
   master.readout.innerHTML = master.available ? `${Math.round(master.vol * 100)}<small>%</small>` : "—";
   master.fader.setAttribute("aria-valuenow", Math.round(master.vol * 100));
-  master.fader.setAttribute("aria-valuetext", master.available ? `${Math.round(master.vol * 100)} percent, headphones only` : "Unavailable");
+  master.fader.setAttribute("aria-valuetext", master.available ? `${Math.round(master.vol * 100)} percent, local output` : "Unavailable");
   master.mute.setAttribute("aria-pressed", String(master.muted));
-  master.mute.setAttribute("aria-label", "Mute headphones only");
+  master.mute.setAttribute("aria-label", "Mute local output only");
   $("span", master.mute).textContent = master.muted ? "Muted" : "Mute";
   masterEl.classList.toggle("muted", master.muted);
 };
-master.sender = makeSender(async (vol) => {
-  const r = await api("/api/master", { volume: vol });
+master.sender = makeSender(async ({ volume, deviceUid }) => {
+  const r = await api("/api/master", { volume, deviceUid });
   if (!r.ok) log(`master: ${r.data.error ?? "not set"}`, "err");
 });
-const setMaster = (vol) => { if (!master.available) return; master.vol = clamp(vol, 0, 1); renderMaster(); master.sender.push(master.vol); };
+const setMaster = (vol) => { if (!master.available) return; master.vol = clamp(vol, 0, 1); renderMaster(); master.sender.push({ volume: master.vol, deviceUid: master.uid }); };
 const masterFromPointer = (ev) => { const r = master.fader.getBoundingClientRect(); return 1 - (ev.clientY - r.top) / r.height; };
 master.fader.addEventListener("pointerdown", (ev) => { if (!master.available || ev.button !== 0) return; master.fader.setPointerCapture(ev.pointerId); master.fader.classList.add("dragging"); setMaster(masterFromPointer(ev)); });
 master.fader.addEventListener("pointermove", (ev) => { if (master.fader.classList.contains("dragging")) setMaster(masterFromPointer(ev)); });
@@ -196,27 +199,41 @@ master.fader.addEventListener("keydown", (ev) => {
   master.sender.flush();
 });
 master.mute.addEventListener("click", async () => {
-  if (!master.available || masterEl.dataset.mutePending === "true") return;
+  if (!master.muteAvailable || masterEl.dataset.mutePending === "true") return;
   const want = !master.muted;
   masterEl.dataset.mutePending = "true";
   master.mute.disabled = true;
-  const r = await api("/api/master", { muted: want });
+  const deviceUid = master.uid;
+  const r = await api("/api/master", { muted: want, deviceUid });
   masterEl.dataset.mutePending = "false";
-  master.mute.disabled = !master.available;
+  master.mute.disabled = !master.muteAvailable;
+  if (master.uid !== deviceUid) return;
   if (!r.ok) { log(`master: mute failed — ${r.data.error ?? "no reply"}`, "err"); return; }
   master.muted = Boolean(r.data.master?.muted);
   renderMaster();
 });
 const applyMaster = (s) => {
-  const offline = !s || s.volume === null || s.volume === undefined;
+  const changed = master.uid !== (s?.uid ?? null);
+  if (changed) {
+    master.sender.cancel();
+    master.fader.classList.remove("dragging");
+  }
+  master.uid = s?.uid ?? null;
+  if (deviceData && s?.uid) {
+    deviceData = { ...deviceData, currentOutput: s };
+    renderDeviceChoices();
+  }
+  const offline = !s || typeof s.volume !== "number" || !master.uid || deviceBusy;
   master.available = !offline;
+  master.muteAvailable = Boolean(master.uid && typeof s?.muted === "boolean" && !deviceBusy);
   setAvailable(masterEl, !offline);
-  if (offline) { master.sender.cancel(); renderMaster(); }
-  $("#master-device").textContent = offline ? (s?.error ? "helper missing" : "no output device") : "Not sent to Space";
-  $("#master-device").title = offline ? (s?.error ?? "") : `System output: ${s.device}. Does not change what the Space hears.`;
-  if (offline || master.fader.classList.contains("dragging") || master.sender.recentlySent()) return;
-  master.vol = s.volume;
-  master.muted = Boolean(s.muted);
+  master.mute.disabled = !master.muteAvailable || masterEl.dataset.mutePending === "true";
+  if (offline) master.sender.cancel();
+  $("#master-device").textContent = s?.device ? (offline ? "Use device volume" : "Local listening only") : "No output device";
+  $("#master-device").title = s?.error ?? (s?.device ? `Mac output: ${s.device}. This changes the Mac's default listening device, not OBS's BlackHole output.` : "Connect speakers or headphones");
+  if (!changed && !offline && (master.fader.classList.contains("dragging") || master.sender.recentlySent())) return;
+  master.vol = typeof s?.volume === "number" ? s.volume : 0;
+  master.muted = Boolean(s?.muted);
   renderMaster();
 };
 renderMaster();
@@ -257,6 +274,7 @@ async function refreshStatus() {
   renderTrim(data.trim);
   applyMaster(data.master ?? (data.masterError ? { volume: null, error: data.masterError } : null));
   fillBrowsers(data.browsers);
+  renderDeviceChoices();
 
   // live problems that leave the pills green but the Space silent
   const notes = [];
@@ -277,6 +295,7 @@ async function refreshStatus() {
 // Both pickers (strip + drawer) show the same list; the strip one shows the LIVE capture target.
 let liveSource = null;
 let setupSource = null;
+let setupMic = null;
 const GROUPS = { browser: "Browsers", player: "Players", other: "Other running apps" };
 function fillSelect(sel, list, chosen, { shortNames = false } = {}) {
   const groups = {};
@@ -320,18 +339,81 @@ $("#sel-source").addEventListener("change", async (e) => {
   log(`music source → ${e.target.selectedOptions[0]?.textContent ?? bundleId}${r.data.running ? "" : " (not running)"}`, r.data.running ? "" : "warn");
   await refreshStatus();
 });
-async function refreshDevices() {
-  const { data } = await api("/api/devices");
-  const selMic = $("#sel-mic");
-  const current = data.currentMic || selMic.value || safeGet("mic");
-  selMic.replaceChildren(...(data.mics ?? []).map((m) => new Option(m.itemName, m.itemValue)));
-  if (current && [...selMic.options].some((o) => o.value === current)) selMic.value = current;
-  fillBrowsers(data.apps);
+// Preserve an unplugged selection instead of silently showing the first available device.
+function fillDeviceSelect(sel, items, chosen, placeholder, force = false) {
+  if (!force && document.activeElement === sel) return;
+  const signature = JSON.stringify([items, chosen]);
+  if (sel.dataset.options !== signature) {
+    sel.dataset.options = signature;
+    const options = items.map((d) => new Option(d.name, d.uid));
+    if (!chosen || !items.some((d) => d.uid === chosen)) {
+      const missing = new Option(chosen ? "Unavailable device" : placeholder, chosen || "");
+      missing.disabled = true;
+      options.unshift(missing);
+    }
+    sel.replaceChildren(...options);
+  }
+  sel.value = chosen || "";
 }
+function renderDeviceChoices(force = false) {
+  if (!deviceData) return;
+  const mics = (deviceData.mics ?? []).filter((d) => d.itemEnabled !== false).map((d) => ({ name: d.itemName, uid: d.itemValue }));
+  const outputs = deviceData.outputs ?? [];
+  const mic = $("#sel-mic-source"), output = $("#sel-output");
+  if (!deviceBusy) {
+    fillDeviceSelect(mic, mics, deviceData.currentMic, "Choose mic", force);
+    fillDeviceSelect(output, outputs, deviceData.currentOutput?.uid, "Choose output", force);
+    fillDeviceSelect($("#sel-mic"), mics, setupMic || deviceData.currentMic || safeGet("mic"), "Choose mic");
+  }
+  mic.disabled = deviceBusy || !lastStatus?.obsConnected || lastStatus?.session?.state !== "stopped" || !mics.length;
+  output.disabled = deviceBusy || !outputs.length;
+  const micName = mics.find((d) => d.uid === deviceData.currentMic)?.name ?? "Selected mic unavailable";
+  mic.title = `${micName}. Stop sharing to change the mic; the new mic stays muted.`;
+  output.title = `Mac output: ${deviceData.currentOutput?.device || "none"}. Choose speakers or headphones. Uses this device's existing volume.`;
+  strips.mic.el.classList.toggle("source-stopped", Boolean(deviceData.currentMic && !mics.some((d) => d.uid === deviceData.currentMic)));
+}
+async function refreshDevices(force = false) {
+  if (deviceRefreshBusy) return;
+  deviceRefreshBusy = true;
+  try {
+    const { ok, data } = await api("/api/devices");
+    if (!ok) {
+      $("#sel-mic-source").disabled = true;
+      $("#sel-output").disabled = true;
+      return;
+    }
+    deviceData = data;
+    renderDeviceChoices(force);
+    fillBrowsers(data.apps);
+  } finally { deviceRefreshBusy = false; }
+}
+async function changeDevice(kind, deviceUid) {
+  if (deviceBusy) return;
+  deviceBusy = true;
+  master.sender.cancel();
+  master.fader.classList.remove("dragging");
+  renderDeviceChoices();
+  if (kind === "output") applyMaster(deviceData?.currentOutput);
+  try {
+    const r = await api("/api/device", { kind, deviceUid });
+    if (!r.ok) log(`${kind}: ${r.data.error ?? "device not changed"}`, "err");
+    else {
+      if (kind === "mic") { setupMic = deviceUid; safeSet("mic", deviceUid); }
+      log(kind === "mic" ? "Microphone changed · sharing stopped, mic muted" : "Mac output changed · device's existing volume retained");
+    }
+  } finally {
+    deviceBusy = false;
+    await refreshDevices(true);
+    await refreshStatus();
+  }
+}
+$("#sel-mic-source").addEventListener("change", (e) => changeDevice("mic", e.target.value));
+$("#sel-output").addEventListener("change", (e) => changeDevice("output", e.target.value));
+for (const id of ["#sel-mic-source", "#sel-output"]) $(id).addEventListener("blur", () => renderDeviceChoices());
 const safeGet = (k) => { try { return localStorage.getItem(`sm:${k}`); } catch { return null; } };
 const safeSet = (k, v) => { try { localStorage.setItem(`sm:${k}`, v); } catch {} };
 $("#sel-app").addEventListener("change", (e) => { setupSource = e.target.value; safeSet("browser", setupSource); });
-$("#sel-mic").addEventListener("change", (e) => safeSet("mic", e.target.value));
+$("#sel-mic").addEventListener("change", (e) => { setupMic = e.target.value; safeSet("mic", setupMic); });
 
 // ---- actions ----------------------------------------------------------------------------
 
@@ -418,6 +500,8 @@ document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !drawe
 // ---- sharing lifecycle --------------------------------------------------------------
 let sessionBusy = false;
 function renderSession(session) {
+  if (lastStatus) lastStatus = { ...lastStatus, session };
+  renderDeviceChoices();
   const state = session?.state ?? "unverified";
   $("#session-state").textContent = session?.error ?? ({stopped:"Sharing stopped",sharing:"Sharing · unmute sources when ready",starting:"Starting…",stopping:"Stopping…",unverified:"Stop sharing to verify silence"}[state] ?? "Sharing state unconfirmed");
   $("#btn-start").disabled = sessionBusy || state !== "stopped";
@@ -448,6 +532,9 @@ $("#btn-quit").addEventListener("click", () => sessionAction("quit"));
 
 function controllerOffline() {
   renderSession({state:"error",error:"Controller disconnected · verify destination mute"});
+  deviceData = null;
+  $("#sel-mic-source").disabled = true;
+  $("#sel-output").disabled = true;
   applyState(null);
   applyMaster(null);
   applyMeters({ music: [-60, -60], mic: [-60, -60] });
@@ -482,4 +569,4 @@ function connectSocket() {
 connectSocket();
 refreshStatus();
 refreshDevices();
-setInterval(refreshStatus, 5000);
+setInterval(() => { refreshStatus(); refreshDevices(); }, 5000);

@@ -20,12 +20,14 @@ An audio mixer for **X Spaces hosts, co-hosts, and approved speakers**, with a p
 | Control | What changes |
 |---|---|
 | Music | Level and mute for one selected app sent to the mix |
-| Mic | Level and mute for one physical microphone sent to the mix |
-| PHONES | macOS default output volume; local listening only |
+| Mic | Choose a physical microphone; adjust its level and mute in the mix |
+| Local output | Choose speakers/headphones and adjust the Mac’s default output volume; local listening only |
 | Music source picker | Retargets a CoreAudio process tap to another app |
 | Setup | Selects a microphone and builds the Spaces Mixer scene collection in OBS |
 
-It does not switch your default headphone device, mix several independent music apps, route arbitrary device channels, or supply an X login/integration. Those are potential future features, not controls that exist today.
+The Mic and Local Output strip labels are device selectors. Stop sharing before changing the mic; it stays muted until you start sharing and deliberately unmute it. Local Output changes the Mac’s default listening device and uses that device’s existing volume. Display/digital outputs without software volume show “Use device volume.” See [device selection](docs/FAQ.md#how-do-i-choose-a-microphone-speakers-or-headphones).
+
+It does not mix several independent music apps, route arbitrary device channels, or supply an X login/integration. Those are potential future features, not controls that exist today.
 
 ```text
 Music app → CoreAudio process tap → BlackHole 16ch ─┐
@@ -41,7 +43,7 @@ The recorded working configuration uses **Firefox for music and Brave for the Sp
 
 The intended setup is **download → install → choose music, mic and headphones → test → start sharing**. End users should not need Terminal, Git, Bun, or Swift tools. A guided installer handles missing audio components with explicit OS approval where required.
 
-Windows support needs a platform-specific capture/device backend and desktop shell; it is not available in the current Mac code. Signed Windows and Mac packages, guided setup, output-device selection, are planned in the [installer specification](docs/INSTALLER-SPEC.md).
+Windows support needs a platform-specific capture/device backend and desktop shell; it is not available in the current Mac code. Signed Windows and Mac packages and guided setup are planned in the [installer specification](docs/INSTALLER-SPEC.md).
 
 ## Build from source
 

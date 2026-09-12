@@ -8,7 +8,8 @@ const schemas: Record<string, Record<string, (v: unknown) => boolean>> = {
   "/api/setup": { browserBundleId: isBundleId, micDeviceUid: text },
   "/api/volume": { input: (v) => v === "music" || v === "mic", db: (v) => v === null || number(v, -100, 26) },
   "/api/mute": { input: (v) => v === "music" || v === "mic", muted: (v) => typeof v === "boolean" },
-  "/api/master": { volume: (v) => number(v, 0, 1), muted: (v) => typeof v === "boolean" },
+  "/api/master": { volume: (v) => number(v, 0, 1), muted: (v) => typeof v === "boolean", deviceUid: text },
+  "/api/device": { kind: (v) => v === "mic" || v === "output", deviceUid: text },
   "/api/source": { bundleId: isBundleId },
   "/api/trim": { auto: (v) => typeof v === "boolean", db: (v) => number(v, -20, 30) },
   "/api/session": { action: (v) => v === "start" || v === "stop" || v === "quit" },
@@ -20,7 +21,8 @@ export function validateBody(path: string, body: unknown): string | undefined {
   const keys = Object.keys(body);
   if (keys.some((k) => !Object.hasOwn(schema, k) || !schema[k](body[k]))) return "Invalid or unexpected field";
   if (path === "/api/obs/prepare") return;
-  if (path === "/api/master" || path === "/api/trim") return keys.length ? undefined : "At least one setting is required";
+  if (path === "/api/master") return text(body.deviceUid) && ("volume" in body || "muted" in body) ? undefined : "Output device and setting required";
+  if (path === "/api/trim") return keys.length ? undefined : "At least one setting is required";
   if (Object.keys(schema).some((k) => !Object.hasOwn(body, k))) return "Required field missing";
 }
 export class RequestError extends Error {

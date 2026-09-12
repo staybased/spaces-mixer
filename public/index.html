@@ -38,7 +38,7 @@
     </article>
 
     <article class="strip offline" data-input="mic">
-      <div class="channel-head"><span class="channel-role">Voice · to Space</span><h2 class="scribble">MIC</h2></div>
+      <div class="channel-head"><span class="channel-role">Mic · to Space</span><h2 class="scribble scribble-select"><select id="sel-mic-source" aria-label="Microphone input" disabled><option>Choose mic</option></select></h2></div>
       <div class="fader-row">
         <div class="meter" aria-hidden="true"><i class="bar"></i><i class="bar"></i></div>
         <div class="fader" role="slider" tabindex="-1" aria-disabled="true" aria-orientation="vertical" aria-label="Mic level to Space" title="Space level. ↑ ↓: 1 dB; Shift: 5 dB; Home: 0 dB; End: silence." aria-valuemin="-60" aria-valuemax="6" aria-valuenow="-3">
@@ -51,9 +51,9 @@
       <span class="sub dim" title="RNNoise noise suppression → 4:1 compressor, applied in OBS">Voice cleanup</span>
     </article>
     <article class="strip master offline" data-input="master">
-      <div class="channel-head"><span class="channel-role">Local output</span><h2 class="scribble">PHONES</h2></div>
+      <div class="channel-head"><span class="channel-role">Local output</span><h2 class="scribble scribble-select"><select id="sel-output" aria-label="Local output device" disabled><option>Choose output</option></select></h2></div>
       <div class="fader-row">
-        <div class="fader" role="slider" tabindex="-1" aria-disabled="true" aria-orientation="vertical" aria-label="Headphone volume" title="Local listening only. Does not change the Space. ↑ ↓: volume step; Home: full; End: silence." aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+        <div class="fader" role="slider" tabindex="-1" aria-disabled="true" aria-orientation="vertical" aria-label="Local output volume" title="Speakers or headphones. ↑ ↓: volume step; Home: full; End: silence." aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
           <div class="track"></div><div class="scale"><span class="tick" style="--p:1">100</span><span class="tick" style="--p:.75">75</span><span class="tick" style="--p:.5">50</span><span class="tick" style="--p:.25">25</span><span class="tick" style="--p:0">0</span></div>
           <div class="cap"></div>
         </div>

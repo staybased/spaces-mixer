@@ -16,6 +16,9 @@ class Element {
     add: (name: string) => this.classes.add(name),
   };
   style = { setProperty() {} };
+  options: any[] = [];
+  value = "";
+  replaceChildren(...children: any[]) { this.options = children; }
   textContent = "";
   innerHTML = "";
   hidden = true;
@@ -40,6 +43,7 @@ function dashboard() {
   let seq = 0;
   const requests: { path: string; body?: string }[] = [];
   const context = createContext({
+    Option: class { disabled = false; constructor(public textContent: string, public value: string) {} },
     document, URLSearchParams, location: { search: "", host: "127.0.0.1:4780" },
     WebSocket: class {},
     fetch: (path: string, options?: { body: string }) => {
@@ -131,4 +135,45 @@ test("sharing controls never offer Start before stop is confirmed", () => {
   expect(page.document.querySelector("#btn-start").disabled).toBe(false);
   page.evaluate('renderSession({state:"sharing"})');
   expect(page.document.querySelector("#btn-start").disabled).toBe(true);
+});
+
+
+test("output switch cancels queued volume for the old device", () => {
+  const page = dashboard();
+  page.evaluate('applyMaster({uid:"old",volume:.5,muted:false,device:"Old"}); setMaster(.8); applyMaster({uid:"new",volume:.2,muted:false,device:"Speakers"})');
+  page.tick();
+  expect(page.requests.filter(r => r.body)).toEqual([]);
+  expect(page.evaluate('master.vol')).toBe(.2);
+  page.evaluate('setMaster(.3); master.sender.flush()');
+  expect(JSON.parse(page.requests.at(-1)!.body!)).toEqual({ volume: .3, deviceUid: "new" });
+});
+test("unsupported output volume is distinct from a missing output", () => {
+  const page = dashboard();
+  page.evaluate('applyMaster({uid:"hdmi",volume:null,muted:null,device:"Display Speakers"})');
+  expect(page.document.querySelector("#master-device").textContent).toBe("Use device volume");
+  expect(page.document.querySelector(".strip.master").querySelector(".mute").disabled).toBe(true);
+});
+test("unplugged selected device remains explicit rather than falling back", () => {
+  const page = dashboard();
+  page.evaluate('fillDeviceSelect($("#sel-mic-source"), [{uid:"webcam",name:"Webcam"}], "unplugged", "Choose mic")');
+  const select = page.document.querySelector("#sel-mic-source");
+  expect(select.value).toBe("unplugged");
+  expect(select.options[0].textContent).toBe("Unavailable device");
+  expect(select.options[0].disabled).toBe(true);
+});
+test("mic selection locks during sharing, output selection stays available", () => {
+  const page = dashboard();
+  page.evaluate('lastStatus={obsConnected:true,session:{state:"stopped"}}; deviceData={currentMic:"mic",mics:[{itemName:"Mic",itemValue:"mic",itemEnabled:true}],outputs:[{uid:"speakers",name:"Speakers"}],currentOutput:{uid:"speakers",device:"Speakers"}}; renderDeviceChoices()');
+  expect(page.document.querySelector("#sel-mic-source").disabled).toBe(false);
+  page.evaluate('renderSession({state:"sharing"})');
+  expect(page.document.querySelector("#sel-mic-source").disabled).toBe(true);
+  expect(page.document.querySelector("#sel-output").disabled).toBe(false);
+});
+
+
+test("setup keeps a deliberate pending mic choice across device refreshes", () => {
+  const page = dashboard();
+  page.evaluate('lastStatus={obsConnected:true,session:{state:"stopped"}}; setupMic="new"; deviceData={currentMic:"old",mics:[{itemName:"Old",itemValue:"old"},{itemName:"New",itemValue:"new"}],outputs:[]}; renderDeviceChoices()');
+  expect(page.document.querySelector("#sel-mic").value).toBe("new");
+  expect(page.document.querySelector("#sel-mic-source").value).toBe("old");
 });

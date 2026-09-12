@@ -4,6 +4,7 @@
 //   sysvol mute 1|0       → sets default output mute
 //   sysvol watch          → streams a JSON line on every volume/mute/default-device change
 //   sysvol devices        → [{"name":..,"uid":..,"input":true,"output":false}, ...]
+//   sysvol output <uid>   → select the Mac's physical default output, verified by readback
 import CoreAudio
 import Foundation
 
@@ -32,6 +33,26 @@ func allDevices() -> [AudioDeviceID] {
   var ids = [AudioDeviceID](repeating: 0, count: Int(sz) / MemoryLayout<AudioDeviceID>.size)
   AudioObjectGetPropertyData(sys, &a, 0, nil, &sz, &ids); return ids
 }
+func virtualDevice(_ dev: AudioDeviceID) -> Bool {
+  var a = addr(kAudioDevicePropertyTransportType); var transport: UInt32 = 0; var sz = UInt32(4)
+  guard AudioObjectGetPropertyData(dev, &a, 0, nil, &sz, &transport) == noErr else { return true }
+  return transport == kAudioDeviceTransportTypeVirtual || transport == kAudioDeviceTransportTypeAggregate
+}
+func physicalOutput(_ dev: AudioDeviceID) -> Bool {
+  let label = str(dev, kAudioObjectPropertyName) + " " + str(dev, kAudioDevicePropertyDeviceUID)
+  return hasStreams(dev, kAudioDevicePropertyScopeOutput) && !virtualDevice(dev)
+    && label.range(of: "blackhole|loopback|soundflower|spaces.?mixer.?tap", options: [.regularExpression, .caseInsensitive]) == nil
+}
+func setOutput(_ uid: String) -> Bool {
+  guard var dev = allDevices().first(where: { str($0, kAudioDevicePropertyDeviceUID) == uid && physicalOutput($0) }) else { return false }
+  var a = addr(kAudioHardwarePropertyDefaultOutputDevice)
+  guard AudioObjectSetPropertyData(sys, &a, 0, nil, UInt32(MemoryLayout<AudioDeviceID>.size), &dev) == noErr else { return false }
+  for _ in 0..<20 {
+    if defaultOutput() == dev { return true }
+    Thread.sleep(forTimeInterval: 0.025)
+  }
+  return false
+}
 func json(_ obj: Any) -> String {
   let d = try! JSONSerialization.data(withJSONObject: obj, options: [.sortedKeys]); return String(decoding: d, as: UTF8.self)
 }
@@ -41,15 +62,19 @@ func state() -> String {
   let okV = AudioObjectGetPropertyData(dev, &va, 0, nil, &vs, &v) == noErr
   var m: UInt32 = 0; var ms = UInt32(4); var ma = addr(kAudioDevicePropertyMute, kAudioDevicePropertyScopeOutput)
   let okM = AudioObjectGetPropertyData(dev, &ma, 0, nil, &ms, &m) == noErr
-  return json(["volume": okV ? (Double((v * 1000).rounded()) / 1000) as Any : NSNull(), "muted": okM ? (m != 0) as Any : NSNull(), "device": str(dev, kAudioObjectPropertyName)])
+  return json(["volume": okV ? (Double((v * 1000).rounded()) / 1000) as Any : NSNull(), "muted": okM ? (m != 0) as Any : NSNull(), "device": str(dev, kAudioObjectPropertyName), "uid": str(dev, kAudioDevicePropertyDeviceUID)])
 }
-func setVolume(_ x: Float32) -> Bool {
+func setVolume(_ x: Float32, _ uid: String) -> Bool {
+  let dev = defaultOutput()
+  guard str(dev, kAudioDevicePropertyDeviceUID) == uid, physicalOutput(dev) else { return false }
   var v = max(0, min(1, x)); var a = addr(VIRTUAL_MAIN_VOLUME, kAudioDevicePropertyScopeOutput)
-  return AudioObjectSetPropertyData(defaultOutput(), &a, 0, nil, 4, &v) == noErr
+  return AudioObjectSetPropertyData(dev, &a, 0, nil, 4, &v) == noErr
 }
-func setMute(_ on: Bool) -> Bool {
+func setMute(_ on: Bool, _ uid: String) -> Bool {
+  let dev = defaultOutput()
+  guard str(dev, kAudioDevicePropertyDeviceUID) == uid, physicalOutput(dev) else { return false }
   var m: UInt32 = on ? 1 : 0; var a = addr(kAudioDevicePropertyMute, kAudioDevicePropertyScopeOutput)
-  return AudioObjectSetPropertyData(defaultOutput(), &a, 0, nil, 4, &m) == noErr
+  return AudioObjectSetPropertyData(dev, &a, 0, nil, 4, &m) == noErr
 }
 
 let args = CommandLine.arguments.dropFirst()
@@ -58,14 +83,18 @@ case "get": print(state())
 case "devices":
   let list: [[String: Any]] = allDevices().map { d in
     ["name": str(d, kAudioObjectPropertyName), "uid": str(d, kAudioDevicePropertyDeviceUID),
-     "input": hasStreams(d, kAudioDevicePropertyScopeInput), "output": hasStreams(d, kAudioDevicePropertyScopeOutput)]
+     "input": hasStreams(d, kAudioDevicePropertyScopeInput), "output": hasStreams(d, kAudioDevicePropertyScopeOutput), "virtual": virtualDevice(d)]
   }
   print(json(list))
 case "set":
-  guard let s = args.dropFirst().first, let f = Float32(s) else { fputs("usage: sysvol set 0..1\n", stderr); exit(2) }
-  exit(setVolume(f) ? 0 : 1)
+  guard let s = args.dropFirst().first, let f = Float32(s), f.isFinite, let uid = args.dropFirst(2).first else { fputs("usage: sysvol set 0..1 <uid>\n", stderr); exit(2) }
+  exit(setVolume(f, uid) ? 0 : 1)
 case "mute":
-  exit(setMute((args.dropFirst().first ?? "1") != "0") ? 0 : 1)
+  guard let s = args.dropFirst().first, ["0", "1"].contains(s), let uid = args.dropFirst(2).first else { exit(2) }
+  exit(setMute(s == "1", uid) ? 0 : 1)
+case "output":
+  guard let uid = args.dropFirst().first, setOutput(uid) else { fputs("Could not select the physical output device\n", stderr); exit(1) }
+  print(state())
 case "watch":
   setvbuf(stdout, nil, _IOLBF, 0)
   var listening: AudioDeviceID = 0
@@ -87,5 +116,5 @@ case "watch":
   listen(defaultOutput())
   print(state())
   RunLoop.main.run()
-default: fputs("usage: sysvol get|set <0..1>|mute <1|0>|watch|devices\n", stderr); exit(2)
+default: fputs("usage: sysvol get|set <0..1> <uid>|mute <1|0> <uid>|output <uid>|watch|devices\n", stderr); exit(2)
 }

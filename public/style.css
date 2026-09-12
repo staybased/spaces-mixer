@@ -106,6 +106,8 @@ h1, h2 { margin: 0; font-weight: 600; }
 }
 .scribble-select::after { content: ""; position: absolute; right: 7px; top: 50%; width: 5px; height: 5px; border-right: 2px solid oklch(20% 0 0); border-bottom: 2px solid oklch(20% 0 0); transform: translateY(-70%) rotate(45deg); pointer-events: none; }
 .scribble-select select:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+.scribble-select select:disabled { cursor: default; opacity: .65; }
+#sel-mic-source, #sel-output { font-size: 10px; text-overflow: ellipsis; }
 .strip.source-stopped .scribble { background: linear-gradient(180deg, oklch(80% 0.16 70), oklch(70% 0.16 60)); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 

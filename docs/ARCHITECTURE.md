@@ -6,7 +6,7 @@ Music process → CoreAudio process tap → BlackHole 16ch → OBS music source.
 Physical microphone → OBS mic source.
 OBS monitoring mix → BlackHole 2ch → destination microphone.
 
-PHONES independently controls the macOS default output volume. It is not an OBS master/broadcast fader. The app's output-device selection is not implemented.
+Local Output selects the macOS default output by stable CoreAudio device UID and independently controls its volume/mute when supported. It is not an OBS master/broadcast fader. Virtual/aggregate devices and known broadcast cables are excluded. Commands carry the expected output UID so a delayed adjustment cannot affect a newly selected device. Mic selection requires stopped sharing, validates the physical device and existing CoreAudio source, then verifies mute/monitor-off before and after updating only that source’s device settings.
 
 | Component | Responsibilities |
 |---|---|

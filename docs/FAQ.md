@@ -34,9 +34,19 @@ Connect the selected physical microphone and inspect its device in OBS. Stop the
 
 Test the source while music is actually playing. Auto trim raises gain gradually, holds within 1.5 dB of target to avoid small repeated changes, and holds on silence; compression and limiting follow it. Do not infer pre-fader gain from the panel's post-processing meter alone. Auto-trim listening acceptance is still open; include track dynamics and observed trim changes in a report, without uploading copyrighted audio or private conversation.
 
-## Why does PHONES not change the broadcast?
+## How do I choose a microphone, speakers or headphones?
 
-It controls the Mac's default output volume. Music and Mic control the broadcast mix. Choose a different headphone device in macOS; the mixer does not provide an output-device selector yet.
+Click the device name at the top of **Mic** or **Local output**. The menus refresh as devices connect or disconnect. Missing selections are shown as unavailable, never silently replaced by a different mic.
+
+Stop sharing before changing Mic. The switch updates the existing OBS Mic source, retains its level and filters, and leaves sharing stopped with both sources muted. Choose Start sharing, then deliberately unmute Mic when ready. Setup is still used to build the initial mix.
+
+Local Output selects the Mac's default listening device for applications that follow it, including connected speakers, headphones, USB audio and display audio. It uses the selected device's existing volume; it does not copy the old device's level. Devices without software volume show **Use device volume**; adjust them with their physical controls. The output selector stays usable. Virtual/aggregate devices are excluded from these menus to keep the broadcast cables separate.
+
+Use headphones when an open microphone could pick up your speakers and cause echo. Explicit output choices made inside other apps may override the Mac default.
+
+## Why does Local Output not change the broadcast?
+
+It controls the Mac's default listening output. Music and Mic control the broadcast mix; OBS continues sending that mix to BlackHole 2ch. Local Output is not a monitor of the combined broadcast. Muting it does not mute the Space.
 
 ## Are my other OBS scenes safe?
 

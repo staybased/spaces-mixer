@@ -17,13 +17,14 @@ FAIL below means the complete acceptance condition was not established; an unrun
 
 | Check | Result | Observed evidence |
 |---|---|---|
-| Bun suite | PASS | 131 tests, zero failures; includes real controller against fake OBS, invalid requests, lifecycle, file/ACL and launcher failures. |
+| Bun suite | PASS | 150 tests, zero failures; includes real controller against fake OBS, invalid requests, lifecycle, file/ACL and launcher failures. |
 | Start/native panel/OUT | PASS | Launcher returned successfully; detached controller persisted; native 372×500 panel showed three strips and green OBS/OUT/SRC. |
 | Firefox music | PASS | Music playback resumed; tap callbacks advanced with matching input/output peaks; panel and OBS Browser Music meters showed signal. |
 | Spoken USB microphone | FAIL — not run | The intended USB condenser was present and real setup succeeded; spoken-mic response was not exercised. |
 | Audible final mix/X Space | FAIL — not run | No two-source listening, balance or live speaker-panel acceptance in this session. |
 | Change app | PASS for process retargeting | Native selector retargeted to running Music, reporting one tapped process; closed Safari produced amber warning. Firefox restored. No second-app listening claim. |
 | OBS restart | PASS after fix | Graceful shutdown, closed-file patch, relaunch on dedicated profile and reconnection observed; one controller connection, no new crash report or controller error spam. |
+| Device selectors | PASS for observed control behavior | Native menu selected the connected USB condenser; OBS confirmed its UID, mute and monitoring-off with prior levels retained. Switched local output to built-in speakers, then a display without software volume, then restored CalDigit at 64%. Stale-output volume command rejected with 409; current-device command succeeded. No live mic/listening claim. |
 | Native close | PASS | While capturing, close stopped tap, muted both sources, disabled both monitors and exited controller/helpers. Restart returned to stopped state. |
 | Window movement and resizing | PASS | Visible native title bar restored outside WebKit. Actual title-bar drag moved the panel; corner drag resized it from 409×526 to 463×583. Reopening restored the same position and size; all three levels stayed unchanged. |
 | Auto-trim | PASS for measured steady segment | 40 samples over ~45 seconds: trim held +4.5 dB, OBS gain matched every sample; tap peak + gain ranged −10.96…−9.35 dBFS. Earlier 0.5 dB hunting motivated the tested deadband. This estimate is before the compressor; no audible-pumping, track-change or long-session sign-off. |
@@ -44,3 +45,7 @@ Complete firewall isolation, spoken-mic and two-source listening/Space acceptanc
 ## Later session resume
 
 The controller was no longer running and OBS was waiting at its crash-recovery prompt when work resumed. Normal mode was selected without uploading diagnostics, and the mixer was restarted. OBS reconnected on the dedicated profile with sharing stopped. The intervening shutdown cause was not established; the earlier controlled SIGTERM restart result does not certify every shutdown path. Firewall was still disabled and OBS incoming connections allowed; the earlier administrator sheet was no longer open.
+
+## Device-selector session
+
+Added physical microphone and local-output menus, stable UID checks, missing-device placeholders, live device refresh and hardware-volume fallback. Tests cover rejected/missing/virtual devices, protected OBS identities, active sharing, failed mute/settings/readback and delayed volume requests. Actual USB condenser is now connected under a changed UID and was explicitly selected while stopped. CalDigit local output restored at 64%; both broadcast sources remain muted. Bluetooth, physical unplug during switching, and spoken/combined listening acceptance remain unrun.

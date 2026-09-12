@@ -26,3 +26,9 @@ describe("sysvol", () => {
     expect(clamp01(0.3)).toBe(0.3);
   });
 });
+
+
+test("device identity and virtual transport survive helper parsing", () => {
+  expect(parseMasterLine('{"volume":null,"muted":null,"device":"Display","uid":"hdmi"}')?.uid).toBe("hdmi");
+  expect(parseDevices('[{"uid":"aggregate","name":"My mix","input":true,"output":true,"virtual":true}]')[0].virtual).toBe(true);
+});

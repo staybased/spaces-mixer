@@ -11,7 +11,7 @@ Audience: X Spaces hosts, co-hosts, and approved speakers already on the speaker
 3. **Complete a guided audio setup.** Detect existing dependencies. Explain any missing audio component, provide its verified installer through the wizard, and resume after installation or restart. Ask for administrator access only for components that actually need it.
 4. **Choose music, microphone, and headphones.** Show friendly names, signal meters, and the scope of capture. Confirm the microphone deliberately; do not fall back to another input.
 5. **Test music and voice.** Play a track, speak, and check the mixed signal while off-air. Show the exact microphone-device name to select in the Space client, with a copy button and a screenshot appropriate to that client/platform.
-6. **Start sharing.** Enable the confirmed mix; keep Music, Mic, and PHONES easy to reach. End with **Stop sharing and quit**, with visible confirmation or a clear failure state.
+6. **Start sharing.** Enable the confirmed mix; keep Music, Mic, and Local Output easy to reach. End with **Stop sharing and quit**, with visible confirmation or a clear failure state.
 
 Only missing dependencies should trigger installation. Returning users should open directly to their saved device selections with sharing off until they start a session. Do not make users reconfigure OBS on each launch.
 
