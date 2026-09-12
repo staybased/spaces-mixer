@@ -17,7 +17,7 @@ FAIL below means the complete acceptance condition was not established; an unrun
 
 | Check | Result | Observed evidence |
 |---|---|---|
-| Bun suite | PASS | 155 tests, zero failures; includes real controller against fake OBS, invalid requests, lifecycle, file/ACL and launcher failures. |
+| Bun suite | PASS | 157 tests, zero failures; includes real controller against fake OBS, invalid requests, lifecycle, file/ACL and launcher failures. |
 | Start/native panel/OUT | PASS | Launcher returned successfully; detached controller persisted; native 372×500 panel showed three strips and green OBS/OUT/SRC. |
 | Firefox music | PASS | Music playback resumed; tap callbacks advanced with matching input/output peaks; panel and OBS Browser Music meters showed signal. |
 | Spoken USB microphone | FAIL — not run | The intended USB condenser was present and real setup succeeded; spoken-mic response was not exercised. |
@@ -50,3 +50,5 @@ The controller was no longer running and OBS was waiting at its crash-recovery p
 ## Device-selector session
 
 Added physical microphone and local-output menus, stable UID checks, missing-device placeholders, live device refresh and hardware-volume fallback. Tests cover rejected/missing/virtual devices, protected OBS identities, active sharing, failed mute/settings/readback and delayed volume requests. Actual USB condenser is now connected under a changed UID and was explicitly selected while stopped. CalDigit local output restored at 64%; both broadcast sources remain muted. Bluetooth, physical unplug during switching, and spoken/combined listening acceptance remain unrun.
+
+First-time sharing guidance: visible state-specific instructions and an accessible help dialog added. Native minimum height increased to 540 to fit controls without overlap; old saved frames expand. Tests cover guidance for stopped/sharing/error and help dismissal without audio commands.

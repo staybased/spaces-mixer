@@ -64,7 +64,11 @@
     </article>
   </main>
 
-  <div class="session-controls"><span id="session-state" role="status">Checking sharing state…</span><div><button id="btn-start" type="button" disabled>Start sharing</button><button id="btn-stop" type="button">Stop</button><button id="btn-quit" type="button">Stop & quit</button></div></div>
+  <section class="session-controls" aria-label="Send audio to your Space">
+    <div class="session-heading"><span id="session-state" role="status">Checking sharing state…</span><button id="btn-sharing-help" type="button" aria-haspopup="dialog">How this works</button></div>
+    <p id="session-help">Checking whether the mix is ready.</p>
+    <div class="session-actions"><button id="btn-start" type="button" aria-describedby="session-help" disabled>Start sharing</button><button id="btn-stop" type="button" title="Mute Music and Mic and stop music capture. Keep the mixer open.">Stop audio</button><button id="btn-quit" type="button" title="Stop audio, then close Spaces Mixer. OBS stays open.">Stop & quit</button></div>
+  </section>
   <footer class="hint"><span>Space mic <code>BlackHole 2ch</code></span><span>Firefox music · Brave Space</span><span id="chain-note" class="note" role="status"></span></footer>
 
   <div id="notice" class="notice" hidden><span id="notice-text" role="status"></span><button id="notice-close" type="button" aria-label="Dismiss message">×</button></div>
@@ -94,6 +98,20 @@
   </div>
 </dialog>
 
+<dialog id="dlg-sharing" aria-labelledby="sharing-help-title">
+  <h2 id="sharing-help-title" tabindex="-1">Send your mix to an X Space</h2>
+  <p>This app mixes audio. It does not create or join a Space, or put you on its speaker panel.</p>
+  <ol>
+    <li>Join the Space as a host, co-host or approved speaker. Select <strong>BlackHole 2ch</strong> as its microphone.</li>
+    <li>Choose your music app, microphone and local output above. Keep music and the Space in different browsers.</li>
+    <li><strong>Start sharing</strong> enables the mix. Music and Mic stay muted so you can check everything first.</li>
+    <li>Click the <strong>Muted</strong> button on Music or Mic to unmute that source. Unmute yourself in the Space too.</li>
+  </ol>
+  <p><strong>Stop audio</strong> mutes both sources and stops music capture. The mixer stays open.</p>
+  <p><strong>Stop & quit</strong> does the same, then closes Spaces Mixer. OBS and your music player stay open.</p>
+  <p>Local Output controls your speakers or headphones; it does not mute the Space. Use headphones to keep speaker sound out of your mic.</p>
+  <button id="sharing-help-close" type="button">Got it</button>
+</dialog>
 <script src="/app.js" type="module"></script>
 </body>
 </html>

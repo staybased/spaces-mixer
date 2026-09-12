@@ -58,7 +58,7 @@ Not independently in this version. One selected app plus one physical mic are ex
 
 ## How do I move or resize the panel?
 
-Drag the native title bar labeled **Spaces Mixer** at the very top to move it. Drag an edge or corner to resize it within the supported limits. Its position and size are remembered when you close and reopen it. The floating panel stays above ordinary windows; use the title bar to move it out of the way. Dragging inside a fader adjusts that channel instead.
+Drag the native title bar labeled **Spaces Mixer** at the very top to move it. Drag an edge or corner to resize it within the supported limits (minimum 340×540 on Mac). Its position and size are remembered when you close and reopen it. The floating panel stays above ordinary windows; use the title bar to move it out of the way. Dragging inside a fader adjusts that channel instead.
 
 Setup keeps the Stop buttons visible below it. Press Escape to close Setup and return to the mixer; Escape does not quit the panel.
 
@@ -79,3 +79,7 @@ First disconnect the destination and stop the identified mixer server/helpers; c
 ## OBS shows a crash or Safe Mode prompt
 
 Inspect OBS directly. Safe Mode disables WebSocket control, so the panel cannot connect in that mode. The current launcher retains OBS crash prompts. An AppleScript quit crash was observed on OBS 32.1.2; preparation now uses OBS’s supported graceful SIGTERM path and waits for process exit before patching files. A subsequent restart passed without the prompt. If a crash recurs, keep its diagnostics private and report the exact version and action.
+
+## What does Start sharing actually do?
+
+It enables the audio mix while Music and Mic remain muted. Click their Muted buttons to unmute the sources you want to send, and unmute yourself in the Space too. The app does not create or join an X Space. Click **How this works** beside the sharing status for the complete walkthrough. **Stop audio** mutes both sources and stops music capture while keeping the mixer open; **Stop & quit** then closes the mixer as well.

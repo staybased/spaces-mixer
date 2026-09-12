@@ -296,6 +296,14 @@ button.trim { padding: 0; }
 
 .session-controls { grid-row:3; display:flex; flex-direction:column; gap:5px; align-items:center; padding:5px 8px; font-size:10px; color:#bfc3c9; }
 .session-controls > div { display:flex; gap:6px; }
+.session-heading { width:100%; align-items:center; justify-content:space-between; gap:8px; }
+#session-help { margin:0; font-size:11px; line-height:1.35; text-align:center; max-width:360px; }
+.session-controls #btn-sharing-help { min-height:24px; padding:2px 0; border:0; background:none; color:var(--amber); text-transform:none; letter-spacing:0; white-space:nowrap; text-decoration:underline; }
+#dlg-sharing { width:360px; max-width:calc(100vw - 28px); max-height:calc(100vh - 28px); overflow-y:auto; line-height:1.5; }
+#dlg-sharing h2 { font-size:16px; margin-bottom:12px; }
+#dlg-sharing ol { padding-left:20px; margin:12px 0; }
+#dlg-sharing li { margin-bottom:10px; }
+#sharing-help-close { width:100%; }
 .session-controls button { min-height:32px; padding:6px 8px; border:1px solid #50535c; border-radius:4px; background:#262930; color:#e7e8eb; font:inherit; cursor:pointer; }
 .session-controls button:disabled { opacity:.4; cursor:default; }
 .session-controls button:focus-visible { outline:2px solid #e2ba78; }
@@ -305,3 +313,8 @@ button.trim { padding: 0; }
 .session-controls #btn-stop { border-color: #b55e55; }
 .mute[aria-pressed="true"]:disabled { opacity: .8; }
 .strip.muted .readout { color: oklch(72% 0.10 70); }
+
+@media (max-height: 519px) {
+  body { overflow-y: auto; }
+  .widget { min-height: 520px; }
+}

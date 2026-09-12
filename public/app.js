@@ -500,11 +500,16 @@ const setDrawer = (open) => {
 gear.addEventListener("click", () => setDrawer(drawer.hidden));
 $("#drawer-close").addEventListener("click", () => setDrawer(false));
 $("#notice-close").addEventListener("click", () => { $("#notice").hidden = true; gear.focus(); });
+const sharingHelp = $("#dlg-sharing");
+const closeSharingHelp = () => { sharingHelp.close(); $("#btn-sharing-help").focus(); };
+$("#btn-sharing-help").addEventListener("click", () => { sharingHelp.showModal(); $("#sharing-help-title").focus(); sharingHelp.scrollTop = 0; });
+$("#sharing-help-close").addEventListener("click", closeSharingHelp);
 document.addEventListener("keydown", (ev) => {
   if (ev.key !== "Escape") return;
   // Consume Escape so AppKit does not interpret it as closing the utility panel.
   ev.preventDefault();
-  if (dlg.open) dlg.close();
+  if (sharingHelp.open) closeSharingHelp();
+  else if (dlg.open) dlg.close();
   else if (!drawer.hidden) setDrawer(false);
 });
 
@@ -526,6 +531,12 @@ function renderSession(session) {
   for (const strip of Object.values(strips)) strip.render();
   const reason = state === "stopped" ? startBlockedReason(lastStatus) : "";
   $("#session-state").textContent = session?.error ?? ({stopped:reason ? `Sharing stopped · ${reason}` : "Sharing stopped",sharing:"Sharing · unmute sources when ready",starting:"Starting…",stopping:"Stopping…",unverified:"Stop sharing to verify silence"}[state] ?? "Sharing state unconfirmed");
+  $("#session-help").textContent = ({
+    stopped: "Start enables the mix. Music and Mic stay muted until you unmute them.",
+    sharing: "Unmute Music or Mic to send that source. Unmute yourself in the Space too.",
+    starting: "Preparing the audio route. Your sources stay muted.",
+    stopping: "Muting both sources and stopping music capture. Waiting for confirmation…",
+  })[state] ?? "Silence is not confirmed. Mute yourself in the Space, then retry Stop audio.";
   $("#btn-start").disabled = sessionBusy || deviceBusy || busySetup || busyPrepare || state !== "stopped" || Boolean(reason);
   $("#btn-start").title = reason || "Start sharing with sources muted; unmute them when ready";
   $("#btn-stop").disabled = sessionBusy;

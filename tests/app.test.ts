@@ -227,3 +227,22 @@ test("Escape cancels the preparation dialog before dismissing Setup", () => {
   expect(page.document.querySelector("#drawer").hidden).toBe(false);
   expect(page.requests.filter(r => r.body)).toEqual([]);
 });
+
+
+test("sharing guidance distinguishes muted start from enabled routing and unconfirmed silence", () => {
+  const page = dashboard();
+  page.evaluate('renderSession({state:"stopped"})');
+  expect(page.document.querySelector("#session-help").textContent).toContain("stay muted");
+  page.evaluate('renderSession({state:"sharing"})');
+  expect(page.document.querySelector("#session-help").textContent).toContain("Unmute yourself in the Space");
+  page.evaluate('renderSession({state:"error"})');
+  expect(page.document.querySelector("#session-help").textContent).toContain("Silence is not confirmed");
+});
+test("Escape dismisses sharing help without closing Setup or sending audio commands", () => {
+  const page = dashboard();
+  page.evaluate('setDrawer(true); sharingHelp.open=true');
+  page.document.listeners.get("keydown")!({key:"Escape",preventDefault(){}});
+  expect(page.document.querySelector("#dlg-sharing").open).toBe(false);
+  expect(page.document.querySelector("#drawer").hidden).toBe(false);
+  expect(page.requests.filter(r => r.body)).toEqual([]);
+});

@@ -4,7 +4,7 @@ import Cocoa
 import WebKit
 
 let url = CommandLine.arguments.dropFirst().first ?? "http://127.0.0.1:4780"
-let size = NSSize(width: 372, height: 500)
+let size = NSSize(width: 372, height: 520)
 
 final class Delegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavigationDelegate, WKScriptMessageHandler {
     var panel: NSPanel!
@@ -29,9 +29,15 @@ final class Delegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavig
         panel.isMovableByWindowBackground = false
         panel.backgroundColor = NSColor(red: 0.09, green: 0.09, blue: 0.11, alpha: 1)
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.minSize = NSSize(width: 340, height: 440)
+        panel.minSize = NSSize(width: 340, height: 540)
         panel.maxSize = NSSize(width: 480, height: 720)
         panel.setFrameAutosaveName("SpacesMixerWidget")
+        // Older saved frames must also leave room for the visible sharing instructions.
+        if panel.frame.height < panel.minSize.height {
+            var frame = panel.frame
+            frame.size.height = panel.minSize.height
+            panel.setFrame(frame, display: false)
+        }
         panel.delegate = self
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
