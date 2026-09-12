@@ -1,0 +1,30 @@
+name: Bug report
+description: Report an ordinary functional problem using sanitized details.
+body:
+  - type: markdown
+    attributes:
+      value: "For vulnerabilities, follow SECURITY.md instead of posting a public issue. Remove credentials, recordings, usernames, app inventories, and device identifiers."
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: macOS, CPU architecture, OBS and Bun versions
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, expected result, and actual result
+      description: Include whether the Music/Mic meters moved and where you checked audio.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized errors or screenshots
+      description: Do not attach full OBS configs, audio recordings, or raw device/app dumps.

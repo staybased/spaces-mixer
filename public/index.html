@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spaces Mixer</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="widget">
+  <i class="screw tl"></i><i class="screw tr"></i><i class="screw bl"></i><i class="screw br"></i>
+  <header class="top">
+    <span class="lamp" id="lamp" aria-hidden="true"></span>
+    <h1>Spaces Mixer</h1>
+    <ul class="dots" aria-label="Signal chain status">
+      <li class="dot" id="pill-obs" title="OBS connected"><i></i>OBS</li>
+      <li class="dot" id="pill-monitor" title="OBS monitor output → BlackHole 2ch"><i></i>OUT</li>
+      <li class="dot" id="pill-sources" title="Browser + mic sources built"><i></i>SRC</li>
+    </ul>
+    <button id="btn-gear" class="gear" type="button" aria-expanded="false" aria-controls="drawer" aria-label="Setup">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+    </button>
+  </header>
+
+  <main class="strips" aria-label="Channel strips">
+    <article class="strip offline" data-input="music">
+      <div class="channel-head"><span class="channel-role">Music · to Space</span><h2 class="scribble scribble-select"><label class="visually-hidden" for="sel-source">Music source</label><select id="sel-source" aria-label="Music source app"></select></h2></div>
+      <div class="fader-row">
+        <div class="meter" aria-hidden="true"><i class="bar"></i><i class="bar"></i></div>
+        <div class="fader" role="slider" tabindex="-1" aria-disabled="true" aria-orientation="vertical" aria-label="Music level to Space" title="Space level. ↑ ↓: 1 dB; Shift: 5 dB; Home: 0 dB; End: silence." aria-valuemin="-60" aria-valuemax="6" aria-valuenow="-12">
+          <div class="track"></div><div class="scale"><span class="tick" style="--p:1">+6</span><span class="tick" style="--p:.909">0</span><span class="tick" style="--p:.758">10</span><span class="tick" style="--p:.606">20</span><span class="tick" style="--p:.455">30</span><span class="tick" style="--p:.303">40</span><span class="tick" style="--p:.152">50</span><span class="tick" style="--p:0">∞</span></div>
+          <div class="cap"></div>
+        </div>
+      </div>
+      <output class="readout">-12.0<small>dB</small></output>
+      <button class="mute" type="button" disabled aria-pressed="false"><i class="led"></i><span>Mute</span></button>
+      <button class="sub trim" id="btn-trim" type="button" aria-pressed="true" title="Input trim before the fader. Auto keeps the source near −10 dBFS so the Space's gain control stays idle. Click to toggle auto.">trim +0.0 · auto</button>
+    </article>
+
+    <article class="strip offline" data-input="mic">
+      <div class="channel-head"><span class="channel-role">Voice · to Space</span><h2 class="scribble">MIC</h2></div>
+      <div class="fader-row">
+        <div class="meter" aria-hidden="true"><i class="bar"></i><i class="bar"></i></div>
+        <div class="fader" role="slider" tabindex="-1" aria-disabled="true" aria-orientation="vertical" aria-label="Mic level to Space" title="Space level. ↑ ↓: 1 dB; Shift: 5 dB; Home: 0 dB; End: silence." aria-valuemin="-60" aria-valuemax="6" aria-valuenow="-3">
+          <div class="track"></div><div class="scale"><span class="tick" style="--p:1">+6</span><span class="tick" style="--p:.909">0</span><span class="tick" style="--p:.758">10</span><span class="tick" style="--p:.606">20</span><span class="tick" style="--p:.455">30</span><span class="tick" style="--p:.303">40</span><span class="tick" style="--p:.152">50</span><span class="tick" style="--p:0">∞</span></div>
+          <div class="cap"></div>
+        </div>
+      </div>
+      <output class="readout">-3.0<small>dB</small></output>
+      <button class="mute" type="button" disabled aria-pressed="false"><i class="led"></i><span>Mute</span></button>
+      <span class="sub dim" title="RNNoise noise suppression → 4:1 compressor, applied in OBS">Voice cleanup</span>
+    </article>
+    <article class="strip master offline" data-input="master">
+      <div class="channel-head"><span class="channel-role">Local output</span><h2 class="scribble">PHONES</h2></div>
+      <div class="fader-row">
+        <div class="fader" role="slider" tabindex="-1" aria-disabled="true" aria-orientation="vertical" aria-label="Headphone volume" title="Local listening only. Does not change the Space. ↑ ↓: volume step; Home: full; End: silence." aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <div class="track"></div><div class="scale"><span class="tick" style="--p:1">100</span><span class="tick" style="--p:.75">75</span><span class="tick" style="--p:.5">50</span><span class="tick" style="--p:.25">25</span><span class="tick" style="--p:0">0</span></div>
+          <div class="cap"></div>
+        </div>
+      </div>
+      <output class="readout">50<small>%</small></output>
+      <button class="mute" type="button" disabled aria-pressed="false"><i class="led"></i><span>Mute</span></button>
+      <span class="sub" id="master-device" title="System output device">Not sent to Space</span>
+    </article>
+  </main>
+
+  <div class="session-controls"><span id="session-state" role="status">Checking sharing state…</span><div><button id="btn-start" type="button" disabled>Start sharing</button><button id="btn-stop" type="button">Stop</button><button id="btn-quit" type="button">Stop & quit</button></div></div>
+  <footer class="hint"><span>Space mic <code>BlackHole 2ch</code></span><span>Firefox music · Brave Space</span><span id="chain-note" class="note" role="status"></span></footer>
+
+  <div id="notice" class="notice" hidden><span id="notice-text" role="status"></span><button id="notice-close" type="button" aria-label="Dismiss message">×</button></div>
+
+  <section id="drawer" class="drawer" hidden aria-labelledby="drawer-h">
+    <div class="drawer-top"><h2 id="drawer-h">Mix setup</h2><button id="drawer-close" type="button" aria-label="Close setup">Done</button></div>
+    <label>Music app <select id="sel-app" aria-label="Music app to capture"></select></label>
+    <label>Mic <select id="sel-mic" aria-label="Microphone device"></select></label>
+    <ol class="steps">
+      <li id="step-obs"><b>OBS ready</b><span>WebSocket on · monitor out → BlackHole 2ch</span></li>
+      <li id="step-sources"><b>Mix built</b><span>Sources start muted · unmute after Start sharing</span></li>
+      <li id="step-spaces"><b>X Spaces</b><span>In Brave, select <code>BlackHole 2ch</code> as the Space mic. Play music in Firefox and wear headphones. Other apps work too; keep the Space and music in different browsers.</span></li>
+    </ol>
+    <div class="actions">
+      <button id="btn-prepare" type="button" class="secondary">Prepare OBS</button>
+      <button id="btn-setup" type="button" class="primary">Build mix</button>
+    </div>
+    <pre id="log" class="log" aria-label="Setup activity"></pre>
+  </section>
+</div>
+
+<dialog id="dlg-quit">
+  <p>Prepare will update only the Spaces Mixer profile, secure and rotate OBS WebSocket credentials, then relaunch OBS. Streaming and recording must be stopped. Other profiles are protected.</p>
+  <div class="actions">
+    <button type="button" class="secondary" id="dlg-cancel">Cancel</button>
+    <button type="button" class="primary" id="dlg-go">Quit, fix, relaunch</button>
+  </div>
+</dialog>
+
+<script src="/app.js" type="module"></script>
+</body>
+</html>

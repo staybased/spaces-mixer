@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest a focused improvement to audio setup or controls.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and alternatives
+      description: Describe inputs, outputs, and what the listener should hear.
+    validations:
+      required: true
