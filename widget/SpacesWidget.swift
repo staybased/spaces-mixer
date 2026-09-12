@@ -16,14 +16,17 @@ final class Delegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKNavig
         let rect = NSRect(origin: .zero, size: size)
         panel = NSPanel(
             contentRect: rect,
-            styleMask: [.titled, .closable, .fullSizeContentView, .nonactivatingPanel, .utilityWindow, .resizable],
+            styleMask: [.titled, .closable, .nonactivatingPanel, .utilityWindow, .resizable],
             backing: .buffered, defer: false)
         panel.level = .floating
         panel.isFloatingPanel = true
         panel.hidesOnDeactivate = false
-        panel.titleVisibility = .hidden
-        panel.titlebarAppearsTransparent = true
-        panel.isMovableByWindowBackground = true
+        // Keep a native drag region outside WebKit's interactive content.
+        panel.title = "Spaces Mixer"
+        panel.titleVisibility = .visible
+        panel.titlebarAppearsTransparent = false
+        panel.isMovable = true
+        panel.isMovableByWindowBackground = false
         panel.backgroundColor = NSColor(red: 0.09, green: 0.09, blue: 0.11, alpha: 1)
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.minSize = NSSize(width: 340, height: 440)

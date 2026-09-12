@@ -268,11 +268,6 @@ dialog { background: var(--plate); color: var(--engrave); border: 1px solid oklc
 dialog::backdrop { background: oklch(0% 0 0 / .65); }
 dialog p { margin: 0 0 12px; }
 
-/* native widget: leave room for the macOS traffic lights */
-.native .widget { padding-top: 34px; }
-.native .drawer { top: 76px; }
-.native .screw.tl, .native .screw.tr { top: 24px; }
-
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
 /* Shared rows keep the three channels aligned at every native window size. */
@@ -289,7 +284,6 @@ button.trim { padding: 0; }
 .notice { position: absolute; z-index: 3; top: 54px; left: 14px; right: 14px; display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid var(--amber); border-radius: 5px; background: #29241c; color: #ffe0a3; font-size: 12px; box-shadow: 0 5px 18px #0009; }
 .notice span { flex: 1; overflow-wrap: anywhere; }
 .notice button { padding: 4px 8px; font-size: 18px; }
-.native .notice { top: 74px; }
 @media (max-height: 470px) {
   .widget { gap: 6px; padding-bottom: 8px; }
   .strip, .strip.master { gap: 6px; padding-top: 8px; padding-bottom: 6px; }

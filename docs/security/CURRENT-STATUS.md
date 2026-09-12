@@ -25,6 +25,7 @@ FAIL below means the complete acceptance condition was not established; an unrun
 | Change app | PASS for process retargeting | Native selector retargeted to running Music, reporting one tapped process; closed Safari produced amber warning. Firefox restored. No second-app listening claim. |
 | OBS restart | PASS after fix | Graceful shutdown, closed-file patch, relaunch on dedicated profile and reconnection observed; one controller connection, no new crash report or controller error spam. |
 | Native close | PASS | While capturing, close stopped tap, muted both sources, disabled both monitors and exited controller/helpers. Restart returned to stopped state. |
+| Window movement and resizing | PASS | Visible native title bar restored outside WebKit. Actual title-bar drag moved the panel; corner drag resized it from 409×526 to 463×583. Reopening restored the same position and size; all three levels stayed unchanged. |
 | Auto-trim | PASS for measured steady segment | 40 samples over ~45 seconds: trim held +4.5 dB, OBS gain matched every sample; tap peak + gain ranged −10.96…−9.35 dBFS. Earlier 0.5 dB hunting motivated the tested deadband. This estimate is before the compressor; no audible-pumping, track-change or long-session sign-off. |
 | Protected OBS configuration | PASS for checked files | Two protected scene files matched pre-session SHA-256 fingerprints after restarts. |
 
