@@ -2,6 +2,7 @@ const DB_FLOOR = -60;
 const DB_CEIL = 6;
 const SEND_EVERY_MS = 40;
 const STALE_AFTER_SEND_MS = 400;
+let sessionState = "unverified";
 
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 const positionToDb = (p) => (p <= 0 ? null : DB_FLOOR + clamp(p, 0, 1) * (DB_CEIL - DB_FLOOR));
@@ -88,6 +89,9 @@ for (const el of document.querySelectorAll(".strip:not(.master)")) {
     fader.setAttribute("aria-valuetext", !strip.available ? "Unavailable" : strip.db === null ? "Silence" : `${formatDb(strip.db)} decibels`);
     mute.setAttribute("aria-pressed", String(strip.muted));
     mute.setAttribute("aria-label", `Mute ${key} to Space`);
+    const unmuteBlocked = strip.muted && sessionState !== "sharing";
+    mute.disabled = !strip.available || el.dataset.mutePending === "true" || unmuteBlocked;
+    mute.title = unmuteBlocked ? "Start sharing before unmuting this source" : strip.muted ? `Unmute ${key} to Space` : `Mute ${key} to Space`;
     $("span", mute).textContent = strip.muted ? "Muted" : "Mute";
     el.classList.toggle("muted", strip.muted);
   };
@@ -119,7 +123,7 @@ for (const el of document.querySelectorAll(".strip:not(.master)")) {
   });
 
   mute.addEventListener("click", async () => {
-    if (!strip.available || el.dataset.mutePending === "true") return;
+    if (!strip.available || el.dataset.mutePending === "true" || (strip.muted && sessionState !== "sharing")) return;
     const want = !strip.muted;
     el.dataset.mutePending = "true";
     mute.disabled = true;
@@ -140,8 +144,7 @@ const applyState = (inputs) => {
     strip.available = Boolean(s.exists);
     setAvailable(strip.el, strip.available);
     if (!strip.available) strip.sender.cancel();
-    if (strip.available && (strip.fader.classList.contains("dragging") || strip.sender.recentlySent())) continue;
-    strip.db = s.volumeDb === null || s.volumeDb <= DB_FLOOR ? null : s.volumeDb;
+    if (!strip.available || (!strip.fader.classList.contains("dragging") && !strip.sender.recentlySent())) strip.db = s.volumeDb === null || s.volumeDb <= DB_FLOOR ? null : s.volumeDb;
     strip.muted = s.muted;
     strip.render();
   }
@@ -268,7 +271,8 @@ async function refreshStatus() {
   $("#pill-monitor").title = data.outOk ? `OBS monitor output → ${data.monitorDevice.name}` : (data.blackholePresent ? `OBS monitor is ${data.config?.monitoring?.name ?? "?"} — click Prepare OBS` : "BlackHole 2ch is not installed");
   setStep("#step-obs", data.obsConnected && cfgOk && data.blackholePresent, (data.obsRunning && !cfgOk) || !data.blackholePresent);
   $("#btn-prepare").hidden = Boolean(cfgOk && data.obsRunning);
-  $("#btn-setup").disabled = !data.obsConnected || busySetup || busyPrepare;
+  $("#btn-setup").disabled = !data.obsConnected || busySetup || busyPrepare || data.session?.state !== "stopped";
+  $("#btn-setup").title = data.session?.state === "stopped" ? "Build or repair the selected music and microphone mix" : "Stop sharing before rebuilding the mix";
   applyState(data.obsConnected ? data.inputs : null);
   liveSource = data.live?.musicApp ?? liveSource;
   renderTrim(data.trim);
@@ -488,6 +492,7 @@ const setDrawer = (open) => {
   drawer.hidden = !open;
   gear.setAttribute("aria-expanded", String(open));
   $(".strips").inert = open;
+  $(".strips").style.visibility = open ? "hidden" : "visible";
   $(".hint").inert = open;
   if (open) { refreshDevices(); $("#drawer-close").focus(); }
   else gear.focus();
@@ -495,16 +500,34 @@ const setDrawer = (open) => {
 gear.addEventListener("click", () => setDrawer(drawer.hidden));
 $("#drawer-close").addEventListener("click", () => setDrawer(false));
 $("#notice-close").addEventListener("click", () => { $("#notice").hidden = true; gear.focus(); });
-document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !drawer.hidden) gear.click(); });
+document.addEventListener("keydown", (ev) => {
+  if (ev.key !== "Escape") return;
+  // Consume Escape so AppKit does not interpret it as closing the utility panel.
+  ev.preventDefault();
+  if (dlg.open) dlg.close();
+  else if (!drawer.hidden) setDrawer(false);
+});
 
 // ---- sharing lifecycle --------------------------------------------------------------
 let sessionBusy = false;
+function startBlockedReason(status) {
+  if (!status?.obsConnected) return "Connect OBS in Setup";
+  if (!status.inputs?.music?.exists || !status.inputs?.mic?.exists || !status.live?.onOurScene) return "Build the mix in Setup";
+  if (!status.live?.micPresent) return "Choose a connected microphone";
+  if (!status.outOk || !status.live?.musicDeviceOk || !status.tap?.devicePresent) return "Check the BlackHole devices in Setup";
+  if (!status.tap?.helper) return "Restart the app to load music capture";
+  return "";
+}
 function renderSession(session) {
   if (lastStatus) lastStatus = { ...lastStatus, session };
   renderDeviceChoices();
   const state = session?.state ?? "unverified";
-  $("#session-state").textContent = session?.error ?? ({stopped:"Sharing stopped",sharing:"Sharing · unmute sources when ready",starting:"Starting…",stopping:"Stopping…",unverified:"Stop sharing to verify silence"}[state] ?? "Sharing state unconfirmed");
-  $("#btn-start").disabled = sessionBusy || state !== "stopped";
+  sessionState = state;
+  for (const strip of Object.values(strips)) strip.render();
+  const reason = state === "stopped" ? startBlockedReason(lastStatus) : "";
+  $("#session-state").textContent = session?.error ?? ({stopped:reason ? `Sharing stopped · ${reason}` : "Sharing stopped",sharing:"Sharing · unmute sources when ready",starting:"Starting…",stopping:"Stopping…",unverified:"Stop sharing to verify silence"}[state] ?? "Sharing state unconfirmed");
+  $("#btn-start").disabled = sessionBusy || deviceBusy || busySetup || busyPrepare || state !== "stopped" || Boolean(reason);
+  $("#btn-start").title = reason || "Start sharing with sources muted; unmute them when ready";
   $("#btn-stop").disabled = sessionBusy;
   $("#btn-quit").disabled = sessionBusy;
 }

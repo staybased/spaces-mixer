@@ -17,7 +17,7 @@ FAIL below means the complete acceptance condition was not established; an unrun
 
 | Check | Result | Observed evidence |
 |---|---|---|
-| Bun suite | PASS | 150 tests, zero failures; includes real controller against fake OBS, invalid requests, lifecycle, file/ACL and launcher failures. |
+| Bun suite | PASS | 155 tests, zero failures; includes real controller against fake OBS, invalid requests, lifecycle, file/ACL and launcher failures. |
 | Start/native panel/OUT | PASS | Launcher returned successfully; detached controller persisted; native 372×500 panel showed three strips and green OBS/OUT/SRC. |
 | Firefox music | PASS | Music playback resumed; tap callbacks advanced with matching input/output peaks; panel and OBS Browser Music meters showed signal. |
 | Spoken USB microphone | FAIL — not run | The intended USB condenser was present and real setup succeeded; spoken-mic response was not exercised. |
@@ -25,6 +25,7 @@ FAIL below means the complete acceptance condition was not established; an unrun
 | Change app | PASS for process retargeting | Native selector retargeted to running Music, reporting one tapped process; closed Safari produced amber warning. Firefox restored. No second-app listening claim. |
 | OBS restart | PASS after fix | Graceful shutdown, closed-file patch, relaunch on dedicated profile and reconnection observed; one controller connection, no new crash report or controller error spam. |
 | Device selectors | PASS for observed control behavior | Native menu selected the connected USB condenser; OBS confirmed its UID, mute and monitoring-off with prior levels retained. Switched local output to built-in speakers, then a display without software volume, then restored CalDigit at 64%. Stale-output volume command rejected with 409; current-device command succeeded. No live mic/listening claim. |
+| UI/button review | PASS for exercised controls | Setup and Stop remain visible at 340×440; Escape closes Setup without quitting. Start/Stop transitions, disabled unmute before sharing, locked Mic while sharing, keyboard Music steps, Auto Level and local mute toggles observed with settings restored. Missing-device Start and mute-during-drag regression tests pass. Preparation/rebuild and broadcast unmute not exercised in this review. |
 | Native close | PASS | While capturing, close stopped tap, muted both sources, disabled both monitors and exited controller/helpers. Restart returned to stopped state. |
 | Window movement and resizing | PASS | Visible native title bar restored outside WebKit. Actual title-bar drag moved the panel; corner drag resized it from 409×526 to 463×583. Reopening restored the same position and size; all three levels stayed unchanged. |
 | Auto-trim | PASS for measured steady segment | 40 samples over ~45 seconds: trim held +4.5 dB, OBS gain matched every sample; tap peak + gain ranged −10.96…−9.35 dBFS. Earlier 0.5 dB hunting motivated the tested deadband. This estimate is before the compressor; no audible-pumping, track-change or long-session sign-off. |

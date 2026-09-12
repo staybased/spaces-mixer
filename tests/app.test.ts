@@ -22,6 +22,8 @@ class Element {
   textContent = "";
   innerHTML = "";
   hidden = true;
+  open = false;
+  close() { this.open = false; }
   disabled = false;
   tabIndex = 0;
   querySelector(key: string): Element {
@@ -32,6 +34,7 @@ class Element {
   setAttribute(key: string, value: unknown) { this.attributes.set(key, String(value)); }
   getAttribute(key: string) { return this.attributes.get(key) ?? null; }
   addEventListener(key: string, fn: Function) { this.listeners.set(key, fn); }
+  focus() {}
 }
 
 function dashboard() {
@@ -131,7 +134,7 @@ test("sharing controls never offer Start before stop is confirmed", () => {
   const page=dashboard();
   page.evaluate('renderSession({state:"error",error:"Stop unconfirmed"})');
   expect(page.document.querySelector("#btn-start").disabled).toBe(true);
-  page.evaluate('renderSession({state:"stopped"})');
+  page.evaluate('lastStatus={obsConnected:true,inputs:{music:{exists:true},mic:{exists:true}},live:{onOurScene:true,micPresent:true,musicDeviceOk:true},outOk:true,tap:{helper:true,devicePresent:true}}; renderSession({state:"stopped"})');
   expect(page.document.querySelector("#btn-start").disabled).toBe(false);
   page.evaluate('renderSession({state:"sharing"})');
   expect(page.document.querySelector("#btn-start").disabled).toBe(true);
@@ -176,4 +179,51 @@ test("setup keeps a deliberate pending mic choice across device refreshes", () =
   page.evaluate('lastStatus={obsConnected:true,session:{state:"stopped"}}; setupMic="new"; deviceData={currentMic:"old",mics:[{itemName:"Old",itemValue:"old"},{itemName:"New",itemValue:"new"}],outputs:[]}; renderDeviceChoices()');
   expect(page.document.querySelector("#sel-mic").value).toBe("new");
   expect(page.document.querySelector("#sel-mic-source").value).toBe("old");
+});
+
+
+test("muted sources require sharing before unmute, but emergency mute stays available", () => {
+  const page = dashboard();
+  page.evaluate('renderSession({state:"stopped"}); applyState({music:{exists:true,volumeDb:-12,muted:true}})');
+  const mute = page.music.querySelector(".mute");
+  expect(mute.disabled).toBe(true);
+  mute.listeners.get("click")!();
+  expect(page.requests.filter(r => r.body)).toEqual([]);
+  page.evaluate('renderSession({state:"sharing"})');
+  expect(mute.disabled).toBe(false);
+  page.evaluate('renderSession({state:"error"}); applyState({music:{exists:true,volumeDb:-12,muted:false}})');
+  expect(mute.disabled).toBe(false);
+});
+test("incoming mute state updates while a fader drag preserves its local level", () => {
+  const page = dashboard();
+  page.evaluate('renderSession({state:"sharing"}); applyState({music:{exists:true,volumeDb:-12,muted:false}}); strips.music.fader.classList.add("dragging"); applyState({music:{exists:true,volumeDb:-20,muted:true}})');
+  expect(page.evaluate('strips.music.db')).toBe(-12);
+  expect(page.music.querySelector(".mute").getAttribute("aria-pressed")).toBe("true");
+});
+test("Start explains missing prerequisites even when sharing is stopped", () => {
+  const page = dashboard();
+  page.evaluate('lastStatus={obsConnected:true,inputs:{music:{exists:true},mic:{exists:true}},live:{onOurScene:true,micPresent:false}}; renderSession({state:"stopped"})');
+  expect(page.document.querySelector("#btn-start").disabled).toBe(true);
+  expect(page.document.querySelector("#session-state").textContent).toContain("Choose a connected microphone");
+});
+
+
+test("Escape closes Setup and consumes the native panel dismissal key", () => {
+  const page = dashboard();
+  page.evaluate('setDrawer(true)');
+  let consumed = false;
+  page.document.listeners.get("keydown")!({key:"Escape",preventDefault(){consumed=true;}});
+  expect(consumed).toBe(true);
+  expect(page.document.querySelector("#drawer").hidden).toBe(true);
+  expect(page.requests.filter(r => r.body)).toEqual([]);
+});
+
+
+test("Escape cancels the preparation dialog before dismissing Setup", () => {
+  const page = dashboard();
+  page.evaluate('setDrawer(true); dlg.open=true');
+  page.document.listeners.get("keydown")!({key:"Escape",preventDefault(){}});
+  expect(page.document.querySelector("#dlg-quit").open).toBe(false);
+  expect(page.document.querySelector("#drawer").hidden).toBe(false);
+  expect(page.requests.filter(r => r.body)).toEqual([]);
 });

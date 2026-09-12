@@ -60,6 +60,8 @@ Not independently in this version. One selected app plus one physical mic are ex
 
 Drag the native title bar labeled **Spaces Mixer** at the very top to move it. Drag an edge or corner to resize it within the supported limits. Its position and size are remembered when you close and reopen it. The floating panel stays above ordinary windows; use the title bar to move it out of the way. Dragging inside a fader adjusts that channel instead.
 
+Setup keeps the Stop buttons visible below it. Press Escape to close Setup and return to the mixer; Escape does not quit the panel.
+
 These features are called **window management**: title-bar dragging, window resizing, and saved window placement. The browser dashboard uses its browser's window controls.
 
 ## What does closing the panel do?
