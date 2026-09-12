@@ -82,4 +82,4 @@ Inspect OBS directly. Safe Mode disables WebSocket control, so the panel cannot 
 
 ## What does Start sharing actually do?
 
-It enables the audio mix while Music and Mic remain muted. Click their Muted buttons to unmute the sources you want to send, and unmute yourself in the Space too. The app does not create or join an X Space. Click **How this works** beside the sharing status for the complete walkthrough. **Stop audio** mutes both sources and stops music capture while keeping the mixer open; **Stop & quit** then closes the mixer as well.
+It enables the audio mix while Music and Mic remain muted. Click their Muted buttons to unmute the sources you want to send, and unmute yourself in the Space too. The app does not create or join an X Space. Click the **?** help button beside the sharing status for the complete walkthrough. **Stop audio** mutes both sources and stops music capture while keeping the mixer open; **Stop & quit** then closes the mixer as well.
