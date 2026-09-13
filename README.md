@@ -4,6 +4,8 @@
 
 ### Your Space. Your sound.
 
+Built by [@brotherxyz_](https://x.com/brotherxyz_) on X.
+
 **Music, microphone, and local listening — in one floating mixer.**
 
 `macOS developer preview` · `Bun + TypeScript + Swift` · `MIT licensed`

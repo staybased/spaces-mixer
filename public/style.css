@@ -304,6 +304,7 @@ button.trim { padding: 0; }
 #dlg-sharing h2 { font-size:16px; margin-bottom:12px; }
 #dlg-sharing ol { padding-left:20px; margin:12px 0; }
 #dlg-sharing li { margin-bottom:10px; }
+#dlg-sharing .build-credit { margin:16px 0 12px; padding-top:12px; border-top:1px solid #50535c; color:var(--engrave-dim); font-size:12px; }
 #sharing-help-close { width:100%; }
 .session-controls button { min-height:32px; padding:6px 8px; border:1px solid #50535c; border-radius:4px; background:#262930; color:#e7e8eb; font:inherit; cursor:pointer; }
 .session-controls button:disabled { opacity:.4; cursor:default; }
