@@ -133,6 +133,7 @@ for (const el of document.querySelectorAll(".strip:not(.master)")) {
     if (!r.ok) { log(`${key}: mute failed — ${r.data.error ?? "no reply"}`, "err"); render(); return; }
     strip.muted = Boolean(r.data.muted);
     render();
+    renderSharingSummary();
   });
   render();
 }
@@ -151,6 +152,7 @@ const applyState = (inputs) => {
   const built = Object.values(strips).every((_, i) => inputs?.[Object.keys(strips)[i]]?.exists);
   setPill("#pill-sources", built);
   setStep("#step-sources", built);
+  renderSharingSummary();
 };
 
 const applyMeters = (levels) => {
@@ -523,6 +525,13 @@ function startBlockedReason(status) {
   if (!status.tap?.helper) return "Restart the app to load music capture";
   return "";
 }
+function renderSharingSummary() {
+  if (sessionState !== "sharing") return;
+  const known = Object.values(strips).every((strip) => strip.available);
+  const unmuted = Object.entries(strips).filter(([, strip]) => !strip.muted).map(([key]) => key === "music" ? "Music" : "Mic");
+  $("#session-state").textContent = !known ? "Mix enabled" : unmuted.length ? `${unmuted.join(" + ")} unmuted` : "Mix enabled · both muted";
+  $("#session-help").textContent = !known ? "Check your sources before unmuting." : unmuted.length ? "Your Space must also be unmuted." : "Unmute Music or Mic when you're ready.";
+}
 function renderSession(session) {
   if (lastStatus) lastStatus = { ...lastStatus, session };
   renderDeviceChoices();
@@ -530,18 +539,24 @@ function renderSession(session) {
   sessionState = state;
   for (const strip of Object.values(strips)) strip.render();
   const reason = state === "stopped" ? startBlockedReason(lastStatus) : "";
-  $("#session-state").textContent = session?.error ?? ({stopped:reason ? `Sharing stopped · ${reason}` : "Sharing stopped",sharing:"Sharing · unmute sources when ready",starting:"Starting…",stopping:"Stopping…",unverified:"Stop sharing to verify silence"}[state] ?? "Sharing state unconfirmed");
-  $("#session-help").textContent = ({
-    stopped: "Start enables the mix. Music and Mic stay muted until you unmute them.",
-    sharing: "Unmute Music or Mic to send that source. Unmute yourself in the Space too.",
-    starting: "Preparing the audio route. Your sources stay muted.",
-    stopping: "Muting both sources and stopping music capture. Waiting for confirmation…",
+  $("#session-state").textContent = ({stopped:reason ? "Setup needed" : "Mix stopped",sharing:"Mix enabled",starting:"Starting mix…",stopping:"Stopping audio…",unverified:"Check audio"})[state] ?? "Check audio";
+  $("#session-help").textContent = session?.error ?? ({
+    stopped: reason || "Music and Mic stay muted when you start.",
+    starting: "Preparing audio with both sources muted.",
+    stopping: "Waiting for confirmation that audio has stopped…",
   })[state] ?? "Silence is not confirmed. Mute yourself in the Space, then retry Stop audio.";
-  $("#btn-start").disabled = sessionBusy || deviceBusy || busySetup || busyPrepare || state !== "stopped" || Boolean(reason);
-  $("#btn-start").title = reason || "Start sharing with sources muted; unmute them when ready";
-  $("#btn-stop").disabled = sessionBusy;
+  renderSharingSummary();
+  const start = $("#btn-start"), stop = $("#btn-stop");
+  start.hidden = state !== "stopped";
+  stop.hidden = state === "stopped";
+  start.disabled = sessionBusy || deviceBusy || busySetup || busyPrepare || state !== "stopped" || Boolean(reason);
+  start.title = reason || "Start sharing with sources muted; unmute them when ready";
+  stop.disabled = sessionBusy;
   $("#btn-quit").disabled = sessionBusy;
+  if (document.activeElement === start && start.hidden) stop.focus();
+  else if (document.activeElement === stop && stop.hidden) (start.disabled ? $("#btn-sharing-help") : start).focus();
 }
+
 async function sessionAction(action) {
   if (sessionBusy) return false;
   sessionBusy = true;

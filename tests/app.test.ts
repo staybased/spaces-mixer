@@ -204,7 +204,7 @@ test("Start explains missing prerequisites even when sharing is stopped", () => 
   const page = dashboard();
   page.evaluate('lastStatus={obsConnected:true,inputs:{music:{exists:true},mic:{exists:true}},live:{onOurScene:true,micPresent:false}}; renderSession({state:"stopped"})');
   expect(page.document.querySelector("#btn-start").disabled).toBe(true);
-  expect(page.document.querySelector("#session-state").textContent).toContain("Choose a connected microphone");
+  expect(page.document.querySelector("#session-help").textContent).toContain("Choose a connected microphone");
 });
 
 
@@ -231,10 +231,10 @@ test("Escape cancels the preparation dialog before dismissing Setup", () => {
 
 test("sharing guidance distinguishes muted start from enabled routing and unconfirmed silence", () => {
   const page = dashboard();
-  page.evaluate('renderSession({state:"stopped"})');
+  page.evaluate('lastStatus={obsConnected:true,inputs:{music:{exists:true},mic:{exists:true}},live:{onOurScene:true,micPresent:true,musicDeviceOk:true},outOk:true,tap:{helper:true,devicePresent:true}}; renderSession({state:"stopped"})');
   expect(page.document.querySelector("#session-help").textContent).toContain("stay muted");
-  page.evaluate('renderSession({state:"sharing"})');
-  expect(page.document.querySelector("#session-help").textContent).toContain("Unmute yourself in the Space");
+  page.evaluate('renderSession({state:"sharing"}); applyState({music:{exists:true,volumeDb:-12,muted:false},mic:{exists:true,volumeDb:-3,muted:true}})');
+  expect(page.document.querySelector("#session-help").textContent).toContain("Space must also be unmuted");
   page.evaluate('renderSession({state:"error"})');
   expect(page.document.querySelector("#session-help").textContent).toContain("Silence is not confirmed");
 });
@@ -245,4 +245,28 @@ test("Escape dismisses sharing help without closing Setup or sending audio comma
   expect(page.document.querySelector("#dlg-sharing").open).toBe(false);
   expect(page.document.querySelector("#drawer").hidden).toBe(false);
   expect(page.requests.filter(r => r.body)).toEqual([]);
+});
+
+
+test("session row offers Start when stopped and Stop when enabled or unconfirmed", () => {
+  const page = dashboard();
+  page.evaluate('renderSession({state:"stopped"})');
+  expect(page.document.querySelector("#btn-start").hidden).toBe(false);
+  expect(page.document.querySelector("#btn-stop").hidden).toBe(true);
+  for (const state of ["sharing", "starting", "stopping", "unverified", "error"]) {
+    page.evaluate(`renderSession({state:"${state}"})`);
+    expect(page.document.querySelector("#btn-start").hidden).toBe(true);
+    expect(page.document.querySelector("#btn-stop").hidden).toBe(false);
+  }
+});
+test("sharing summary follows confirmed mute state without claiming the Space is live", () => {
+  const page = dashboard();
+  page.evaluate('renderSession({state:"sharing"}); applyState({music:{exists:true,volumeDb:-12,muted:true},mic:{exists:true,volumeDb:-3,muted:true}})');
+  expect(page.document.querySelector("#session-state").textContent).toBe("Mix enabled · both muted");
+  page.evaluate('applyState({music:{exists:true,volumeDb:-12,muted:false},mic:{exists:true,volumeDb:-3,muted:true}})');
+  expect(page.document.querySelector("#session-state").textContent).toBe("Music unmuted");
+  page.evaluate('applyState({music:{exists:true,volumeDb:-12,muted:false},mic:{exists:true,volumeDb:-3,muted:false}})');
+  expect(page.document.querySelector("#session-state").textContent).toBe("Music + Mic unmuted");
+  page.evaluate('applyState(null)');
+  expect(page.document.querySelector("#session-state").textContent).toBe("Mix enabled");
 });

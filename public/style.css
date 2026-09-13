@@ -319,3 +319,16 @@ button.trim { padding: 0; }
   body { overflow-y: auto; }
   .widget { min-height: 520px; }
 }
+
+/* One primary session action, with a quieter exit alongside it. */
+.session-controls { align-items:stretch; gap:6px; padding:8px 0 0; }
+.session-heading { gap:8px; }
+#session-state { font-size:12px; font-weight:600; color:var(--engrave); }
+#session-help { text-align:left; font-size:11px; max-width:none; }
+.session-actions { width:100%; align-items:center; margin-top:4px; }
+.session-actions button { flex:1; min-width:0; min-height:36px; font-size:11px; letter-spacing:0; text-transform:none; white-space:nowrap; }
+.session-actions button[hidden] { display:none; }
+.session-controls #btn-stop { background:#422c2c; border-color:#a66b64; }
+.session-controls #btn-stop:hover { background:#533332; }
+.session-controls #btn-quit { flex:0 0 auto; padding:6px 10px; border-color:transparent; background:none; box-shadow:none; color:var(--engrave-dim); font-weight:500; }
+.session-controls #btn-quit:hover { color:var(--engrave); background:#ffffff08; }
