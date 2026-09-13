@@ -1,6 +1,6 @@
 # Open-source release plan
 
-Status: local scaffold, 2026-09-12. GitHub identity staybased is verified and MIT is the source-license default. Repository URL, private reporting channel, release signer and public support policy remain to be configured. Nothing has been uploaded. The current source includes security and lifecycle remediation; see current status.
+Status: private GitHub review preparation, 2026-09-12. Account: staybased. MIT source license. Intended repository: https://github.com/staybased/spaces-mixer. Public visibility requires the owner's explicit approval. Private reporting channel, release signer and public support policy remain to be configured. See current verification status for acceptance limits.
 
 ## Windows and Mac requirement
 
@@ -82,3 +82,7 @@ For the proposed Mac download, follow Apple's [notarization workflow](https://de
 ## Current validation
 
 See [current status](security/CURRENT-STATUS.md). Local tests and live Mac checks are recorded there. The source export excludes old local history and personal handoffs. Hosted CI, independent review, clean-machine acceptance and signed packaging remain release work.
+
+## Deferred to v2
+
+The soundboard is deferred. See [v2 notes](V2-NOTES.md) for the proposed pad drawer, effects/imports, licensed packs, routing and verification requirements. No soundboard code or audio assets are included in this version.

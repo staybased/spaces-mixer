@@ -1,8 +1,29 @@
+<div align="center">
+
 # Spaces Mixer
 
-An audio mixer for **X Spaces hosts, co-hosts, and approved speakers**, with a planned simple installation on Windows PCs and Macs. The current working implementation is a Mac source build. Send music from one app alongside your microphone, and keep music, voice, and headphone volume within reach in an always-on-top panel.
+### Your Space. Your sound.
 
-**Developer preview — public release preparation.** This is a working local prototype, not yet a signed download or a broadly verified X integration. Read the [current verification and security status](docs/security/CURRENT-STATUS.md) before testing. No public repository or release has been created by this scaffold.
+**Music, microphone, and local listening — in one floating mixer.**
+
+`macOS developer preview` · `Bun + TypeScript + Swift` · `MIT licensed`
+
+[Get started](docs/GETTING-STARTED.md) · [Walkthrough](docs/WALKTHROUGH.md) · [FAQ](docs/FAQ.md) · [Roadmap](docs/RELEASE-PLAN.md)
+
+<img src="docs/images/spaces-mixer.png" alt="Spaces Mixer on macOS: music, microphone and local-output controls, with the mix stopped and both sources muted." width="420">
+
+*The actual Mac app. Mix stopped; sources muted.*
+
+</div>
+
+Built for **X Spaces hosts, co-hosts, and approved speakers** who want music and voice controls within reach. Choose a music app, pick your mic and speakers or headphones, and manage the mix without leaving your conversation.
+
+- **Music on your terms.** Capture one app, adjust its level, and keep voice separate.
+- **Devices you already use.** Select your microphone and local output directly from the mixer.
+- **Deliberate sharing.** Start with sources muted; stop audio with one clearly labeled action.
+- **A compact desktop companion.** Drag, resize, and keep the panel above your other windows.
+
+> **Developer preview:** current code runs on macOS and requires OBS, BlackHole and developer tools. Windows support and signed installers are planned. This app does not create or join an X Space. Review the [verification and security limits](docs/security/CURRENT-STATUS.md) before testing.
 
 ## Start here
 
@@ -69,3 +90,7 @@ The current implementation also validates Host/Origin and request schemas, bound
 ## License and distribution
 
 The mixer’s own source is licensed under [MIT](LICENSE). See [dependency and distribution notes](docs/LICENSING.md). OBS and BlackHole are installed separately; their source and binaries are not bundled here. No affiliation with X, OBS, or BlackHole is implied.
+
+## Coming later: v2 soundboard
+
+A collapsible sound-pad drawer, independent effects volume, imports and curated sound packs are recorded in the [v2 notes](docs/V2-NOTES.md). **Deferred; not implemented in this preview.**

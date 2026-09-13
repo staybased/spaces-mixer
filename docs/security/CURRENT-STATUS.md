@@ -1,6 +1,6 @@
 # Current verification and security status — 2026-09-12
 
-Mac developer source preview. No public upload or signed installer. Tested on macOS 15.7.4, Apple Silicon, Bun 1.3.10 and OBS 32.1.2. This is an implementation review and observed local testing, not independent certification or a guarantee against every threat.
+Mac developer source preview. Prepared for private GitHub review; public visibility awaits owner approval. No signed installer. Tested on macOS 15.7.4, Apple Silicon, Bun 1.3.10 and OBS 32.1.2. This is an implementation review and observed local testing, not independent certification or a guarantee against every threat.
 
 ## Corrected and checked
 
